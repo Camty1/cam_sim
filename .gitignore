@@ -1,4 +1,2 @@
-bazel-bin
-bazel-out
-bazel-sim
-bazel-testlogs
+bazel-*
+resolved.bzl
