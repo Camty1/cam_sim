@@ -1,0 +1,294 @@
+\documentclass{article}
+\usepackage[letterpaper, margin=1in]{geometry}
+\usepackage{amsmath}
+
+\title{UK Derivation}
+\author{Cameron Wolfe}
+\date{\today}
+
+\begin{document}
+
+\section{Revolute Joint UK Constraints}
+
+To simulate rigid bodies joined by a joint, we will start by deriving the constraints needed for forming the UK $A$ matrix.  Let us start by defining two rigidbodies 1 and 2.  Each rigid body has a physical displacement from the inertial frame $r_{i/0}^0$ where $i$ is the number of the rigid body.  Additionally, each rigid body has an orientation relative to the inertial frame (represented as a quaternion) $q_0^i$.
+
+The joint between the two rigidbodies is defined as follows.  The joint has a displacement from the center of mass of the body in the body frame $r_{j/i}^i$.  Additionally, the joint is oriented relative to the body frame with an orientation $q_i^j$.  Rotation of the joint is defined to occur around the z axis of the joint frame in the primary body with the angle $\theta^2_1$.
+
+Defining the state of this system, we have the following:
+
+\begin{equation}
+    \mathbf{x} = \begin{bmatrix}
+        r_{1/0}^0 \\
+        q_0^1 \\
+        r_{2/0}^0 \\
+        q_0^2 \\
+        \theta_1^2
+    \end{bmatrix}
+\end{equation}
+
+To simulate a revolute joint, we need to constrain three spatial dimensions and two rotational directions.  Starting with the spatial constraint, we know that the position of the joint in the two bodies should be co-located.  This is defined as follows:
+
+\begin{equation}
+    r_{1/0}^0 + R((q_0^1)^{-1}, r_{j/1}^1) = r_{2/0}^0 + R((q_0^2)^{-1}, r_{j/2}^2)
+    \label{eq_translation_constraint}
+\end{equation}
+
+Where $R(q, r)$ is a passive quaternion rotation defined as:
+
+\begin{equation}
+    R(q, r) = q^{-1} \otimes r^\prime \otimes q = q^{-1} \otimes \begin{bmatrix} 0 \\ r_x \\ r_y \\ r_z \end{bmatrix} \otimes q
+\end{equation}
+
+And $\otimes$ is the hamilton multplication of quaternions.  We will define all permutations of inverses and hamilton multiplication below:
+
+\begin{align}
+    \begin{split}
+        q \otimes p &= (q_wp_w - q_xp_x - q_yp_y - q_zp_z) \\
+                    &+ (q_wp_x + q_xp_w + q_yp_z - q_zp_y)i \\
+                    &+ (q_wp_y - q_xp_z + q_yp_w + q_zp_x)j \\
+                    &+ (q_wp_z + q_xp_y - q_yp_x + q_zp_w)k
+    \end{split}
+\end{align}
+\begin{align}
+    \begin{split}
+        q^{-1} \otimes p &= (q_wp_w + q_xp_x + q_yp_y + q_zp_z) \\
+                         &+ (q_wp_x - q_xp_w - q_yp_z + q_zp_y)i \\
+                         &+ (q_wp_y + q_xp_z - q_yp_w - q_zp_x)j \\
+                         &+ (q_wp_z - q_xp_y + q_yp_x - q_zp_w)k
+    \end{split}
+\end{align}
+\begin{align}
+    \begin{split}
+        q \otimes p^{-1} &= (q_wp_w + q_xp_x + q_yp_y + q_zp_z) \\
+                         &+ (-q_wp_x + q_xp_w - q_yp_z + q_zp_y)i \\
+                         &+ (-q_wp_y + q_xp_z + q_yp_w - q_zp_x)j \\
+                         &+ (-q_wp_z - q_xp_y + q_yp_x + q_zp_w)k
+    \end{split}
+\end{align}
+\begin{align}
+    \begin{split}
+        q^{-1} \otimes p^{-1} &= (q_wp_w - q_xp_x - q_yp_y - q_zp_z) \\
+                              &+ (-q_wp_x - q_xp_w + q_yp_z - q_zp_y)i \\
+                              &+ (-q_wp_y - q_xp_z - q_yp_w + q_zp_x)j \\
+                              &+ (-q_wp_z + q_xp_y - q_yp_x - q_zp_w)k
+    \end{split}
+\end{align}
+
+We can now use these definitions to derive an expression for $R(q, r)$:
+
+\begin{align}
+    \begin{split}
+        q^{-1} \otimes r^\prime &= (q_xr_x + q_yr_y + q_zr_z) \\
+                                &+ (q_wr_x - q_yr_z + q_zr_y)i \\
+                                &+ (q_wr_y + q_xr_z - q_zr_x)j \\
+                                &+ (q_wr_z - q_xr_y + q_yr_x)k
+    \end{split}
+\end{align}
+\begin{align}
+    \begin{split}
+        (q^{-1} \otimes r^\prime) \otimes q &= ((q_xr_x + q_yr_y + q_zr_z)q_w - (q_wr_x - q_yr_z + q_zr_y)q_x \\
+                                            &- (q_wr_y + q_xr_z - q_zr_x)q_y - (q_wr_z - q_xr_y + q_yr_x)q_z) \\
+                                            &+ ((q_xr_x + q_yr_y + q_zr_z)q_x + (q_wr_x - q_yr_z + q_zr_y)q_w \\
+                                            &+ (q_wr_y + q_xr_z - q_zr_x)q_z - (q_wr_z - q_xr_y + q_yr_x)q_y)i \\
+                                            &+ ((q_xr_x + q_yr_y + q_zr_z)q_y - (q_wr_x - q_yr_z + q_zr_y)q_z \\
+                                            &+ (q_wr_y + q_xr_z - q_zr_x)q_w + (q_wr_z - q_xr_y + q_yr_x)q_x)j \\
+                                            &+ ((q_xr_x + q_yr_y + q_zr_z)q_z + (q_wr_x - q_yr_z + q_zr_y)q_y \\
+                                            &- (q_wr_y + q_xr_z - q_zr_x)q_x + (q_wr_z - q_xr_y + q_yr_x)q_w)k \\
+    \end{split} \nonumber \\
+    \nonumber \\
+    \begin{split}
+        q^{-1} \otimes r^\prime \otimes q &= (q_w^2r_x + q_x^2r_x - q_y^2r_x - q_z^2r_x + 2q_wq_zr_y + 2q_xq_yr_y - 2q_wq_yr_z + 2q_xq_zr_z)i \\
+                                          &+ (q_w^2r_y - q_x^2r_y + q_y^2r_y - q_z^2r_y - 2q_wq_zr_x + 2q_xq_yr_x + 2q_wq_xr_z + 2q_yq_zr_z)j \\
+                                          &+ (q_w^2r_z - q_x^2r_z - q_y^2r_z + q_z^2r_z + 2q_wq_yr_x + 2q_xq_zr_x - 2q_wq_xr_y + 2q_yq_zr_y)k
+    \end{split}
+\end{align}
+
+We can also derive an expression for $R(q^{-1}, r)$, since that is used in defining our constraints, by negating the vector components of the quaternion.
+
+\begin{align}
+    \begin{split}
+        q \otimes r^\prime \otimes q^{-1} &= (q_w^2r_x + q_x^2r_x - q_y^2r_x - q_z^2r_x - 2q_wq_zr_y + 2q_xq_yr_y + 2q_wq_yr_z + 2q_xq_zr_z)i \\
+                                          &+ (q_w^2r_y - q_x^2r_y + q_y^2r_y - q_z^2r_y + 2q_wq_zr_x + 2q_xq_yr_x - 2q_wq_xr_z + 2q_yq_zr_z)j \\
+                                          &+ (q_w^2r_z - q_x^2r_z - q_y^2r_z + q_z^2r_z - 2q_wq_yr_x + 2q_xq_zr_x + 2q_wq_xr_y + 2q_yq_zr_y)k
+    \end{split}
+\end{align}
+
+Using the expression for quaternion rotation, we can define the translational constraints from equation \eqref{eq_translation_constraint} in terms of our state variables.
+
+\begin{align}
+    \begin{split}
+        \phi_{r_x} &= (r_{1/0}^0)_x + (q_0^1)_w^2(r_{j/1}^1)_x + (q_0^1)_x^2(r_{j/1}^1)_x - (q_0^1)_y^2(r_{j/1}^1)_x - (q_0^1)_z^2(r_{j/1}^1)_x \\
+                   &- 2(q_0^1)_w(q_0^1)_z(r_{j/1}^1)_y + 2(q_0^1)_x(q_0^1)_y(r_{j/1}^1)_y + 2(q_0^1)_w(q_0^1)_y(r_{j/1}^1)_z + 2(q_0^1)_x(q_0^1)_z(r_{j/1}^1)_z \\
+                   &- (r_{2/0}^0)_x - (q_0^2)_w^2(r_{j/2}^2)_x - (q_0^2)_x^2(r_{j/2}^2)_x + (q_0^2)_y^2(r_{j/2}^2)_x + (q_0^2)_z^2(r_{j/2}^2)_x \\
+                   &+ 2(q_0^2)_w(q_0^2)_z(r_{j/2}^2)_y - 2(q_0^2)_x(q_0^2)_y(r_{j/2}^2)_y - 2(q_0^2)_w(q_0^2)_y(r_{j/2}^2)_z - 2(q_0^2)_x(q_0^2)_z(r_{j/2}^2)_z
+    \end{split} \\
+    \nonumber \\
+    \begin{split}
+        \phi_{r_y} &= (r_{1/0}^0)_y + (q_0^1)_w^2(r_{j/1}^1)_y - (q_0^1)_x^2(r_{j/1}^1)_y + (q_0^1)_y^2(r_{j/1}^1)_y - (q_0^1)_z^2(r_{j/1}^1)_y \\
+                   &+ 2(q_0^1)_w(q_0^1)_z(r_{j/1}^1)_x + 2(q_0^1)_x(q_0^1)_y(r_{j/1}^1)_x - 2(q_0^1)_w(q_0^1)_x(r_{j/1}^1)_z + 2(q_0^1)_y(q_0^1)_z(r_{j/1}^1)_z \\
+                   &- (r_{2/0}^0)_y - (q_0^2)_w^2(r_{j/2}^2)_y + (q_0^2)_x^2(r_{j/2}^2)_y - (q_0^2)_y^2(r_{j/2}^2)_y + (q_0^2)_z^2(r_{j/2}^2)_y \\
+                   &- 2(q_0^2)_w(q_0^2)_z(r_{j/2}^2)_x - 2(q_0^2)_x(q_0^2)_y(r_{j/2}^2)_x + 2(q_0^2)_w(q_0^2)_x(r_{j/2}^2)_z - 2(q_0^2)_y(q_0^2)_z(r_{j/2}^2)_z
+    \end{split} \\
+    \nonumber \\
+    \begin{split}
+        \phi_{r_z} &= (r_{1/0}^0)_z + (q_0^1)_w^2(r_{j/1}^1)_z - (q_0^1)_x^2(r_{j/1}^1)_z - (q_0^1)_y^2(r_{j/1}^1)_z + (q_0^1)_z^2(r_{j/1}^1)_z \\
+                   &- 2(q_0^1)_w(q_0^1)_y(r_{j/1}^1)_x + 2(q_0^1)_x(q_0^1)_z(r_{j/1}^1)_x + 2(q_0^1)_w(q_0^1)_x(r_{j/1}^1)_y + 2(q_0^1)_y(q_0^1)_z(r_{j/1}^1)_y \\
+                   &- (r_{2/0}^0)_z - (q_0^2)_w^2(r_{j/2}^2)_z + (q_0^2)_x^2(r_{j/2}^2)_z + (q_0^2)_y^2(r_{j/2}^2)_z - (q_0^2)_z^2(r_{j/2}^2)_z \\
+                   &+ 2(q_0^2)_w(q_0^2)_y(r_{j/2}^2)_x - 2(q_0^2)_x(q_0^2)_z(r_{j/2}^2)_x - 2(q_0^2)_w(q_0^2)_x(r_{j/2}^2)_y - 2(q_0^2)_y(q_0^2)_z(r_{j/2}^2)_y
+    \end{split}
+\end{align}
+
+With the positional constraints defined, we can now define the rotational constraint.  Body two rotates to body one about the z axes of their corresponding joint frames.  Therefore, we would expect that the orientation of the joint frame in body one with a rotation about the z axis will match the orientation of the joint frame in body two.  This gives us the following (Note that this convention of quaternion multiplication is defined as so that $qp = p\otimes q$):
+
+\begin{align}
+    q_0^1q_1^jq_{\theta_1^2} &= q_0^2q_2^j
+\end{align}
+
+Which we can rearrange to form:
+
+\begin{align}
+    (q_1^j)^{-1}(q_0^1)^{-1}q_0^2q_2^j = q_{\theta_1^2}
+\end{align}
+
+This constraint can be simplified further, as $\theta_1^2$ can be derived from the orientations of the joint frames.  Additionally, since the joint rotates around the z axis in both joint frames, we can set the x and y components of the joint frame orientations relative to the inertial frame equal to each other to derive equations for our rotational constraints
+
+\begin{align}
+    (q_0^1q_1^j)_x &= (q_0^2q_2^j)_x \\
+    (q_0^1q_1^j)_y &= (q_0^2q_2^j)_y
+\end{align}
+
+Let us calculate what these two attitudes are, and then use them to determine the constraints
+
+\begin{align}
+    \begin{split}
+        q_0^1q_1^j = q_1^j\otimes q_0^1 &= ((q_1^j)_w(q_0^1)_w - (q_1^j)_x(q_0^1)_x - (q_1^j)_y(q_0^1)_y - (q_1^j)_z(q_0^1)_z) \\
+                                        &+ ((q_1^j)_w(q_0^1)_x + (q_1^j)_x(q_0^1)_w + (q_1^j)_y(q_0^1)_z - (q_1^j)_z(q_0^1)_y)i \\
+                                        &+ ((q_1^j)_w(q_0^1)_y - (q_1^j)_x(q_0^1)_z + (q_1^j)_y(q_0^1)_w + (q_1^j)_z(q_0^1)_x)j \\
+                                        &+ ((q_1^j)_w(q_0^1)_z + (q_1^j)_x(q_0^1)_y - (q_1^j)_y(q_0^1)_x + (q_1^j)_z(q_0^1)_w)k
+    \end{split}\\
+    \nonumber\\
+    \begin{split}
+        q_0^2q_2^j = q_2^j\otimes q_0^2 &= ((q_2^j)_w(q_0^2)_w - (q_2^j)_x(q_0^2)_x - (q_2^j)_y(q_0^2)_y - (q_2^j)_z(q_0^2)_z) \\
+                                        &+ ((q_2^j)_w(q_0^2)_x + (q_2^j)_x(q_0^2)_w + (q_2^j)_y(q_0^2)_z - (q_2^j)_z(q_0^2)_y)i \\
+                                        &+ ((q_2^j)_w(q_0^2)_y - (q_2^j)_x(q_0^2)_z + (q_2^j)_y(q_0^2)_w + (q_2^j)_z(q_0^2)_x)j \\
+                                        &+ ((q_2^j)_w(q_0^2)_z + (q_2^j)_x(q_0^2)_y - (q_2^j)_y(q_0^2)_x + (q_2^j)_z(q_0^2)_w)k
+    \end{split}
+\end{align}
+
+\begin{align}
+    \begin{split}
+        \phi_{q_x} &= (q_1^j)_w(q_0^1)_x + (q_1^j)_x(q_0^1)_w + (q_1^j)_y(q_0^1)_z - (q_1^j)_z(q_0^1)_y \\
+                   &- (q_2^j)_w(q_0^2)_x - (q_2^j)_x(q_0^2)_w - (q_2^j)_y(q_0^2)_z + (q_2^j)_z(q_0^2)_y
+    \end{split}\\
+    \nonumber\\
+    \begin{split}
+        \phi_{q_y} &= (q_1^j)_w(q_0^1)_y - (q_1^j)_x(q_0^1)_z + (q_1^j)_y(q_0^1)_w + (q_1^j)_z(q_0^1)_x \\
+                   &- (q_2^j)_w(q_0^2)_y + (q_2^j)_x(q_0^2)_z - (q_2^j)_y(q_0^2)_w - (q_2^j)_z(q_0^2)_x
+    \end{split}
+\end{align}
+
+Finally, we will have to make sure that the attitude quaternions are valid, so we will add a norm constraint for each:
+
+\begin{align}
+    \phi_{q_0^1} &= |q_0^1|^2 - 1 = (q_0^1)_w^2 + (q_0^1)_x^2 + (q_0^1)_y^2 + (q_0^1)_z^2 - 1 \\
+    \nonumber \\
+    \phi_{q_0^2} &= |q_0^2|^2 - 1 = (q_0^2)_w^2 + (q_0^2)_x^2 + (q_0^2)_y^2 + (q_0^2)_z^2 - 1
+\end{align}
+
+Combining all of our constraints into one vector equation, we have the following:
+
+\begin{align}
+    \phi &= \begin{bmatrix}
+        \phi_{r_x} \\
+        \phi_{r_y} \\
+        \phi_{r_z} \\
+        \phi_{q_x} \\
+        \phi_{q_y} \\
+        \phi_{q_0^1} \\
+        \phi_{q_0^2} \\
+        \end{bmatrix}
+\end{align}
+
+We can now go equation by equation, taking the second derivative of the holonomic constraints to determine the UK constraint equation $A(x, \dot{x}, t)\ddot{x} = b(x, \dot{x}, t)$
+
+\begin{align}
+    \begin{split}
+        \frac{d\phi_{r_x}}{dt} &= (v_{1/0}^0)_x + 2(q_0^1)_w(r_{j/1}^1)_x(\dot{q}_0^1)_w + 2(q_0^1)_x(r_{j/1}^1)_x(\dot{q}_0^1)_x - 2(q_0^1)_y(r_{j/1}^1)_x(\dot{q}_0^1)_y - 2(q_0^1)_z(r_{j/1}^1)_x(\dot{q}_0^1)_z \\
+                               &- 2(q_0^1)_z(r_{j/1}^1)_y(\dot{q}_0^1)_w - 2(q_0^1)_w(r_{j/1}^1)_y(\dot{q}_0^1)_z + 2(q_0^1)_y(r_{j/1}^1)_y(\dot{q}_0^1)_x + 2(q_0^1)_x(r_{j/1}^1)_y(\dot{q}_0^1)_y \\
+                               &+ 2(q_0^1)_y(r_{j/1}^1)_z(\dot{q}_0^1)_w + 2(q_0^1)_w(r_{j/1}^1)_z(\dot{q}_0^1)_y + 2(q_0^1)_z(r_{j/1}^1)_z(\dot{q}_0^1)_x + 2(q_0^1)_x(r_{j/1}^1)_z(\dot{q}_0^1)_z \\
+                               &- (v_{2/0}^0)_x - 2(q_0^2)_w(r_{j/2}^2)_x(\dot{q}_0^2)_w - 2(q_0^2)_x(r_{j/2}^2)_x(\dot{q}_0^2)_x + 2(q_0^2)_y(r_{j/2}^2)_x(\dot{q}_0^2)_y + 2(q_0^2)_z(r_{j/2}^2)_x(\dot{q}_0^2)_z \\
+                               &+ 2(q_0^2)_z(r_{j/2}^2)_y(\dot{q}_0^2)_w + 2(q_0^2)_w(r_{j/2}^2)_y(\dot{q}_0^2)_z - 2(q_0^2)_y(r_{j/2}^2)_y(\dot{q}_0^2)_x - 2(q_0^2)_x(r_{j/2}^2)_y(\dot{q}_0^2)_y \\ 
+                               &- 2(q_0^2)_y(r_{j/2}^2)_z(\dot{q}_0^2)_w - 2(q_0^2)_w(r_{j/2}^2)_z(\dot{q}_0^2)_y - 2(q_0^2)_z(r_{j/2}^2)_z(\dot{q}_0^2)_x - 2(q_0^2)_x(r_{j/2}^2)_z(\dot{q}_0^2)_z 
+    \end{split}
+\end{align}
+\begin{align}
+    \begin{split}
+        \frac{d^2\phi_{r_x}}{dt^2} &= (a_{1/0}^0)_x + 2(q_0^1)_w(r_{j/1}^1)_x(\ddot{q}_0^1)_w + 2(r_{j/1}^1)_x(\dot{q}_0^1)_w^2 + 2(q_0^1)_x(r_{j/1}^1)_x(\ddot{q}_0^1)_x + 2(r_{j/1}^1)_x(\dot{q}_0^1)_x^2 \\
+                                   &- 2(q_0^1)_y(r_{j/1}^1)_x(\ddot{q}_0^1)_y - 2(r_{j/1}^1)_x(\dot{q}_0^1)_y^2 - 2(q_0^1)_z(r_{j/1}^1)_x(\ddot{q}_0^1)_z - 2(r_{j/1}^1)_x(\dot{q}_0^1)_z^2 \\
+                                   &- 2(q_0^1)_z(r_{j/1}^1)_y(\ddot{q}_0^1)_w - 2(q_0^1)_w(r_{j/1}^1)_y(\ddot{q}_0^1)_z - 2(r_{j/1}^1)_y(\dot{q}_0^1)_w(\dot{q}_0^1)_z + 2(q_0^1)_y(r_{j/1}^1)_y(\ddot{q}_0^1)_x \\
+                                   &+ 2(q_0^1)_x(r_{j/1}^1)_y(\ddot{q}_0^1)_y + 2(r_{j/1}^1)_y(\dot{q}_0^1)_x(\dot{q}_0^1)_y + 2(q_0^1)_y(r_{j/1}^1)_z(\ddot{q}_0^1)_w + 2(q_0^1)_w(r_{j/1}^1)_z(\ddot{q}_0^1)_y \\
+                                   &+ 2(r_{j/1}^1)_z(\dot{q}_0^1)_w(\dot{q}_0^1)_y + 2(q_0^1)_z(r_{j/1}^1)_z(\ddot{q}_0^1)_x + 2(q_0^1)_x(r_{j/1}^1)_z(\ddot{q}_0^1)_z + 2(r_{j/1}^1)_z(\dot{q}_0^1)_x(\dot{q}_0^1)_z \\
+                                   &- (a_{2/0}^0)_x - 2(q_0^2)_w(r_{j/2}^2)_x(\ddot{q}_0^2)_w - 2(r_{j/2}^2)_x(\dot{q}_0^2)_w^2 - 2(q_0^2)_x(r_{j/2}^2)_x(\ddot{q}_0^2)_x - 2(r_{j/2}^2)_x(\dot{q}_0^2)_x^2 \\
+                                   &+ 2(q_0^2)_y(r_{j/2}^2)_x(\ddot{q}_0^2)_y + 2(r_{j/2}^2)_x(\dot{q}_0^2)_y^2 + 2(q_0^2)_z(r_{j/2}^2)_x(\ddot{q}_0^2)_z + 2(r_{j/2}^2)_x(\dot{q}_0^2)_z^2 \\
+                                   &+ 2(q_0^2)_z(r_{j/2}^2)_y(\ddot{q}_0^2)_w + 2(q_0^2)_w(r_{j/2}^2)_y(\ddot{q}_0^2)_z + 2(r_{j/2}^2)_y(\dot{q}_0^2)_w(\dot{q}_0^2)_z - 2(q_0^2)_y(r_{j/2}^2)_y(\ddot{q}_0^2)_x \\
+                                   &- 2(q_0^2)_x(r_{j/2}^2)_y(\ddot{q}_0^2)_y - 2(r_{j/2}^2)_y(\dot{q}_0^2)_x(\dot{q}_0^2)_y - 2(q_0^2)_y(r_{j/2}^2)_z(\ddot{q}_0^2)_w - 2(q_0^2)_w(r_{j/2}^2)_z(\ddot{q}_0^2)_y \\
+                                   &- 2(r_{j/2}^2)_z(\dot{q}_0^2)_w(\dot{q}_0^2)_y - 2(q_0^2)_z(r_{j/2}^2)_z(\ddot{q}_0^2)_x - 2(q_0^2)_x(r_{j/2}^2)_z(\ddot{q}_0^2)_z - 2(r_{j/2}^2)_z(\dot{q}_0^2)_x(\dot{q}_0^2)_z
+    \end{split}
+\end{align}
+\begin{align}
+    \begin{split}
+        \frac{d\phi_{r_y}}{dt} &= (v_{1/0}^0)_y + 2(q_0^1)_w(r_{j/1}^1)_y(\dot{q}_0^1)_w - 2(q_0^1)_x(r_{j/1}^1)_y(\dot{q}_0^1)_x + 2(q_0^1)_y(r_{j/1}^1)_y(\dot{q}_0^1)_y - 2(q_0^1)_z(r_{j/1}^1)_y(\dot{q}_0^1)_z \\
+                               &+ 2(q_0^1)_z(r_{j/1}^1)_x(\dot{q}_0^1)_w + 2(q_0^1)_w(r_{j/1}^1)_x(\dot{q}_0^1)_z + 2(q_0^1)_y(r_{j/1}^1)_x(\dot{q}_0^1)_x + 2(q_0^1)_x(r_{j/1}^1)_x(\dot{q}_0^1)_y \\
+                               &- 2(q_0^1)_x(r_{j/1}^1)_z(\dot{q}_0^1)_w - 2(q_0^1)_w(r_{j/1}^1)_z(\dot{q}_0^1)_x + 2(q_0^1)_z(r_{j/1}^1)_z(\dot{q}_0^1)_y + 2(q_0^1)_y(r_{j/1}^1)_z(\dot{q}_0^1)_z \\
+                               &- (v_{2/0}^0)_y - 2(q_0^2)_w(r_{j/2}^2)_y(\dot{q}_0^2)_w + 2(q_0^2)_x(r_{j/2}^2)_y(\dot{q}_0^2)_x - 2(q_0^2)_y(r_{j/2}^2)_y(\dot{q}_0^2)_y + 2(q_0^2)_z(r_{j/2}^2)_y(\dot{q}_0^2)_z \\
+                               &- 2(q_0^2)_z(r_{j/2}^2)_x(\dot{q}_0^2)_w - 2(q_0^2)_w(r_{j/2}^2)_x(\dot{q}_0^2)_z - 2(q_0^2)_y(r_{j/2}^2)_x(\dot{q}_0^2)_x - 2(q_0^2)_x(r_{j/2}^2)_x(\dot{q}_0^2)_y \\
+                               &+ 2(q_0^2)_x(r_{j/2}^2)_z(\dot{q}_0^2)_w + 2(q_0^2)_w(r_{j/2}^2)_z(\dot{q}_0^2)_x - 2(q_0^2)_z(r_{j/2}^2)_z(\dot{q}_0^2)_y - 2(q_0^2)_y(r_{j/2}^2)_z(\dot{q}_0^2)_z 
+    \end{split}
+\end{align}
+\begin{align}
+    \begin{split}
+        \frac{d^2\phi_{r_y}}{dt^2} &= (a_{1/0}^0)_y + 2(q_0^1)_w(r_{j/1}^1)_y(\dot{q}_0^1)_w - 2(q_0^1)_x(r_{j/1}^1)_y(\dot{q}_0^1)_x + 2(q_0^1)_y(r_{j/1}^1)_y(\dot{q}_0^1)_y - 2(q_0^1)_z(r_{j/1}^1)_y(\dot{q}_0^1)_z \\
+                                   &+ 2(q_0^1)_z(r_{j/1}^1)_x(\dot{q}_0^1)_w + 2(q_0^1)_w(r_{j/1}^1)_x(\dot{q}_0^1)_z + 2(q_0^1)_y(r_{j/1}^1)_x(\dot{q}_0^1)_x + 2(q_0^1)_x(r_{j/1}^1)_x(\dot{q}_0^1)_y \\
+                                   &- 2(q_0^1)_x(r_{j/1}^1)_z(\dot{q}_0^1)_w - 2(q_0^1)_w(r_{j/1}^1)_z(\dot{q}_0^1)_x + 2(q_0^1)_z(r_{j/1}^1)_z(\dot{q}_0^1)_y + 2(q_0^1)_y(r_{j/1}^1)_z(\dot{q}_0^1)_z \\
+                                   &- (a_{2/0}^0)_y - 2(q_0^2)_w(r_{j/2}^2)_y(\dot{q}_0^2)_w + 2(q_0^2)_x(r_{j/2}^2)_y(\dot{q}_0^2)_x - 2(q_0^2)_y(r_{j/2}^2)_y(\dot{q}_0^2)_y + 2(q_0^2)_z(r_{j/2}^2)_y(\dot{q}_0^2)_z \\
+                                   &- 2(q_0^2)_z(r_{j/2}^2)_x(\dot{q}_0^2)_w - 2(q_0^2)_w(r_{j/2}^2)_x(\dot{q}_0^2)_z - 2(q_0^2)_y(r_{j/2}^2)_x(\dot{q}_0^2)_x - 2(q_0^2)_x(r_{j/2}^2)_x(\dot{q}_0^2)_y \\
+                                   &+ 2(q_0^2)_x(r_{j/2}^2)_z(\dot{q}_0^2)_w + 2(q_0^2)_w(r_{j/2}^2)_z(\dot{q}_0^2)_x - 2(q_0^2)_z(r_{j/2}^2)_z(\dot{q}_0^2)_y - 2(q_0^2)_y(r_{j/2}^2)_z(\dot{q}_0^2)_z 
+    \end{split}
+\end{align}
+\begin{align}
+    \begin{split}
+        \frac{d\phi_{r_z}}{dt} &= (v_{1/0}^0)_z + 2(q_0^1)_w(r_{j/1}^1)_z(\dot{q}_0^1)_w - 2(q_0^1)_x(r_{j/1}^1)_z(\dot{q}_0^1)_x - 2(q_0^1)_y(r_{j/1}^1)_z(\dot{q}_0^1)_y + 2(q_0^1)_z(r_{j/1}^1)_z(\dot{q}_0^1)_z \\
+                               &- 2(q_0^1)_y(r_{j/1}^1)_x(\dot{q}_0^1)_w - 2(q_0^1)_w(r_{j/1}^1)_x(\dot{q}_0^1)_y + 2(q_0^1)_z(r_{j/1}^1)_x(\dot{q}_0^1)_x + 2(q_0^1)_x(r_{j/1}^1)_x(\dot{q}_0^1)_z \\
+                               &+ 2(q_0^1)_x(r_{j/1}^1)_y(\dot{q}_0^1)_w + 2(q_0^1)_w(r_{j/1}^1)_y(\dot{q}_0^1)_x + 2(q_0^1)_z(r_{j/1}^1)_y(\dot{q}_0^1)_y + 2(q_0^1)_y(r_{j/1}^1)_y(\dot{q}_0^1)_z \\
+                               &- (v_{2/0}^0)_z - 2(q_0^2)_w(r_{j/2}^2)_z(\dot{q}_0^2)_w + 2(q_0^2)_x(r_{j/2}^2)_z(\dot{q}_0^2)_x + 2(q_0^2)_y(r_{j/2}^2)_z(\dot{q}_0^2)_y - 2(q_0^2)_z(r_{j/2}^2)_z(\dot{q}_0^2)_z \\
+                               &+ 2(q_0^2)_y(r_{j/2}^2)_x(\dot{q}_0^2)_w + 2(q_0^2)_w(r_{j/2}^2)_x(\dot{q}_0^2)_y - 2(q_0^2)_z(r_{j/2}^2)_x(\dot{q}_0^2)_x - 2(q_0^2)_x(r_{j/2}^2)_x(\dot{q}_0^2)_z \\
+                               &- 2(q_0^2)_x(r_{j/2}^2)_y(\dot{q}_0^2)_w - 2(q_0^2)_w(r_{j/2}^2)_y(\dot{q}_0^2)_x - 2(q_0^2)_z(r_{j/2}^2)_y(\dot{q}_0^2)_y - 2(q_0^2)_y(r_{j/2}^2)_y(\dot{q}_0^2)_z
+    \end{split}
+\end{align}
+\begin{align}
+    \begin{split}
+        \frac{d\phi_{q_x}}{dt} &= (\dot{q}_1^j)_w(q_0^1)_x + (q_1^j)_w(\dot{q}_0^1)_x + (\dot{q}_1^j)_x(q_0^1)_w + (q_1^j)_x(\dot{q}_0^1)_w \\
+                               &+ (\dot{q}_1^j)_y(q_0^1)_z + (q_1^j)_y(\dot{q}_0^1)_z - (\dot{q}_1^j)_z(q_0^1)_y - (q_1^j)_z(\dot{q}_0^1)_y \\
+                               &- (\dot{q}_2^j)_w(q_0^2)_x - (q_2^j)_w(\dot{q}_0^2)_x - (\dot{q}_2^j)_x(q_0^2)_w - (q_2^j)_x(\dot{q}_0^2)_w \\
+                               &- (\dot{q}_2^j)_y(q_0^2)_z - (q_2^j)_y(\dot{q}_0^2)_z + (\dot{q}_2^j)_z(q_0^2)_y + (q_2^j)_z(\dot{q}_0^2)_y
+    \end{split}
+\end{align}
+\begin{align}
+    \begin{split}
+        \frac{d\phi_{q_y}}{dt} &= (\dot{q}_1^j)_w(q_0^1)_y + (q_1^j)_w(\dot{q}_0^1)_y - (\dot{q}_1^j)_x(q_0^1)_z - (q_1^j)_x(\dot{q}_0^1)_z \\
+                               &+ (\dot{q}_1^j)_y(q_0^1)_w + (q_1^j)_y(\dot{q}_0^1)_w + (\dot{q}_1^j)_z(q_0^1)_x + (q_1^j)_z(\dot{q}_0^1)_x \\
+                               &- (\dot{q}_2^j)_w(q_0^2)_y - (q_2^j)_w(\dot{q}_0^2)_y + (\dot{q}_2^j)_x(q_0^2)_z + (q_2^j)_x(\dot{q}_0^2)_z \\
+                               &- (\dot{q}_2^j)_y(q_0^2)_w - (q_2^j)_y(\dot{q}_0^2)_w - (\dot{q}_2^j)_z(q_0^2)_x - (q_2^j)_z(\dot{q}_0^2)_x
+    \end{split}
+\end{align}
+\begin{align}
+    \begin{split}
+        \frac{d\phi_{q_0^1}}{dt} &= 2(q_0^1)_w(\dot{q}_0^1)_w + 2(q_0^1)_x(\dot{q}_0^1)_x + 2(q_0^1)_y(\dot{q}_0^1)_y + 2(q_0^1)_z(\dot{q}_0^1)_z
+    \end{split}
+\end{align}
+\begin{align}
+    \begin{split}
+        \frac{d\phi_{q_0^2}}{dt} &= 2(q_0^2)_w(\dot{q}_0^2)_w + 2(q_0^2)_x(\dot{q}_0^2)_x + 2(q_0^2)_y(\dot{q}_0^2)_y + 2(q_0^2)_z(\dot{q}_0^2)_z
+    \end{split}
+\end{align}
+\end{document}
