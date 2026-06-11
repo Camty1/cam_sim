@@ -10,7 +10,7 @@
 
 \section{Revolute Joint UK Constraints}
 
-To simulate rigid bodies joined by a joint, we will start by deriving the constraints needed for forming the UK $A$ matrix.  Let us start by defining two rigidbodies 1 and 2.  Each rigid body has a physical displacement from the inertial frame $r_{i/0}^0$ where $i$ is the number of the rigid body.  Additionally, each rigid body has an orientation relative to the inertial frame (represented as a quaternion) $q_0^i$.
+To simulate rigid bodies joined by a joint, we will start by deriving the constraints needed for forming the UK $A$ matrix and $b$ vector.  Let us start by defining two rigidbodies 1 and 2.  Each rigid body has a physical displacement from the inertial frame $r_{i/0}^0$ where $i$ is the number of the rigid body.  Additionally, each rigid body has an orientation relative to the inertial frame (represented as a quaternion) $q_0^i$.
 
 The joint between the two rigidbodies is defined as follows.  The joint has a displacement from the center of mass of the body in the body frame $r_{j/i}^i$.  Additionally, the joint is oriented relative to the body frame with an orientation $q_i^j$.  Rotation of the joint is defined to occur around the z axis of the joint frame in the primary body with the angle $\theta^2_1$.
 
@@ -225,14 +225,16 @@ We can now go equation by equation, taking the second derivative of the holonomi
     \begin{split}
         \frac{d^2\phi_{r_x}}{dt^2} &= (a_{1/0}^0)_x + 2(q_0^1)_w(r_{j/1}^1)_x(\ddot{q}_0^1)_w + 2(r_{j/1}^1)_x(\dot{q}_0^1)_w^2 + 2(q_0^1)_x(r_{j/1}^1)_x(\ddot{q}_0^1)_x + 2(r_{j/1}^1)_x(\dot{q}_0^1)_x^2 \\
                                    &- 2(q_0^1)_y(r_{j/1}^1)_x(\ddot{q}_0^1)_y - 2(r_{j/1}^1)_x(\dot{q}_0^1)_y^2 - 2(q_0^1)_z(r_{j/1}^1)_x(\ddot{q}_0^1)_z - 2(r_{j/1}^1)_x(\dot{q}_0^1)_z^2 \\
-                                   &- 2(q_0^1)_z(r_{j/1}^1)_y(\ddot{q}_0^1)_w - 2(q_0^1)_w(r_{j/1}^1)_y(\ddot{q}_0^1)_z - 2(r_{j/1}^1)_y(\dot{q}_0^1)_w(\dot{q}_0^1)_z + 2(q_0^1)_y(r_{j/1}^1)_y(\ddot{q}_0^1)_x \\
-                                   &+ 2(q_0^1)_x(r_{j/1}^1)_y(\ddot{q}_0^1)_y + 2(r_{j/1}^1)_y(\dot{q}_0^1)_x(\dot{q}_0^1)_y + 2(q_0^1)_y(r_{j/1}^1)_z(\ddot{q}_0^1)_w + 2(q_0^1)_w(r_{j/1}^1)_z(\ddot{q}_0^1)_y \\
-                                   &+ 2(r_{j/1}^1)_z(\dot{q}_0^1)_w(\dot{q}_0^1)_y + 2(q_0^1)_z(r_{j/1}^1)_z(\ddot{q}_0^1)_x + 2(q_0^1)_x(r_{j/1}^1)_z(\ddot{q}_0^1)_z + 2(r_{j/1}^1)_z(\dot{q}_0^1)_x(\dot{q}_0^1)_z \\
+                                   &- 2(q_0^1)_z(r_{j/1}^1)_y(\ddot{q}_0^1)_w - 2(q_0^1)_w(r_{j/1}^1)_y(\ddot{q}_0^1)_z - 4(r_{j/1}^1)_y(\dot{q}_0^1)_w(\dot{q}_0^1)_z \\
+                                   &+ 2(q_0^1)_y(r_{j/1}^1)_y(\ddot{q}_0^1)_x + 2(q_0^1)_x(r_{j/1}^1)_y(\ddot{q}_0^1)_y + 4(r_{j/1}^1)_y(\dot{q}_0^1)_x(\dot{q}_0^1)_y \\
+                                   &+ 2(q_0^1)_y(r_{j/1}^1)_z(\ddot{q}_0^1)_w + 2(q_0^1)_w(r_{j/1}^1)_z(\ddot{q}_0^1)_y + 4(r_{j/1}^1)_z(\dot{q}_0^1)_w(\dot{q}_0^1)_y \\
+                                   &+ 2(q_0^1)_z(r_{j/1}^1)_z(\ddot{q}_0^1)_x + 2(q_0^1)_x(r_{j/1}^1)_z(\ddot{q}_0^1)_z + 4(r_{j/1}^1)_z(\dot{q}_0^1)_x(\dot{q}_0^1)_z \\
                                    &- (a_{2/0}^0)_x - 2(q_0^2)_w(r_{j/2}^2)_x(\ddot{q}_0^2)_w - 2(r_{j/2}^2)_x(\dot{q}_0^2)_w^2 - 2(q_0^2)_x(r_{j/2}^2)_x(\ddot{q}_0^2)_x - 2(r_{j/2}^2)_x(\dot{q}_0^2)_x^2 \\
                                    &+ 2(q_0^2)_y(r_{j/2}^2)_x(\ddot{q}_0^2)_y + 2(r_{j/2}^2)_x(\dot{q}_0^2)_y^2 + 2(q_0^2)_z(r_{j/2}^2)_x(\ddot{q}_0^2)_z + 2(r_{j/2}^2)_x(\dot{q}_0^2)_z^2 \\
-                                   &+ 2(q_0^2)_z(r_{j/2}^2)_y(\ddot{q}_0^2)_w + 2(q_0^2)_w(r_{j/2}^2)_y(\ddot{q}_0^2)_z + 2(r_{j/2}^2)_y(\dot{q}_0^2)_w(\dot{q}_0^2)_z - 2(q_0^2)_y(r_{j/2}^2)_y(\ddot{q}_0^2)_x \\
-                                   &- 2(q_0^2)_x(r_{j/2}^2)_y(\ddot{q}_0^2)_y - 2(r_{j/2}^2)_y(\dot{q}_0^2)_x(\dot{q}_0^2)_y - 2(q_0^2)_y(r_{j/2}^2)_z(\ddot{q}_0^2)_w - 2(q_0^2)_w(r_{j/2}^2)_z(\ddot{q}_0^2)_y \\
-                                   &- 2(r_{j/2}^2)_z(\dot{q}_0^2)_w(\dot{q}_0^2)_y - 2(q_0^2)_z(r_{j/2}^2)_z(\ddot{q}_0^2)_x - 2(q_0^2)_x(r_{j/2}^2)_z(\ddot{q}_0^2)_z - 2(r_{j/2}^2)_z(\dot{q}_0^2)_x(\dot{q}_0^2)_z
+                                   &+ 2(q_0^2)_z(r_{j/2}^2)_y(\ddot{q}_0^2)_w + 2(q_0^2)_w(r_{j/2}^2)_y(\ddot{q}_0^2)_z + 4(r_{j/2}^2)_y(\dot{q}_0^2)_w(\dot{q}_0^2)_z \\
+                                   &- 2(q_0^2)_y(r_{j/2}^2)_y(\ddot{q}_0^2)_x - 2(q_0^2)_x(r_{j/2}^2)_y(\ddot{q}_0^2)_y - 4(r_{j/2}^2)_y(\dot{q}_0^2)_x(\dot{q}_0^2)_y \\
+                                   &- 2(q_0^2)_y(r_{j/2}^2)_z(\ddot{q}_0^2)_w - 2(q_0^2)_w(r_{j/2}^2)_z(\ddot{q}_0^2)_y - 4(r_{j/2}^2)_z(\dot{q}_0^2)_w(\dot{q}_0^2)_y \\
+                                   &- 2(q_0^2)_z(r_{j/2}^2)_z(\ddot{q}_0^2)_x - 2(q_0^2)_x(r_{j/2}^2)_z(\ddot{q}_0^2)_z - 4(r_{j/2}^2)_z(\dot{q}_0^2)_x(\dot{q}_0^2)_z
     \end{split}
 \end{align}
 \begin{align}
@@ -242,17 +244,23 @@ We can now go equation by equation, taking the second derivative of the holonomi
                                &- 2(q_0^1)_x(r_{j/1}^1)_z(\dot{q}_0^1)_w - 2(q_0^1)_w(r_{j/1}^1)_z(\dot{q}_0^1)_x + 2(q_0^1)_z(r_{j/1}^1)_z(\dot{q}_0^1)_y + 2(q_0^1)_y(r_{j/1}^1)_z(\dot{q}_0^1)_z \\
                                &- (v_{2/0}^0)_y - 2(q_0^2)_w(r_{j/2}^2)_y(\dot{q}_0^2)_w + 2(q_0^2)_x(r_{j/2}^2)_y(\dot{q}_0^2)_x - 2(q_0^2)_y(r_{j/2}^2)_y(\dot{q}_0^2)_y + 2(q_0^2)_z(r_{j/2}^2)_y(\dot{q}_0^2)_z \\
                                &- 2(q_0^2)_z(r_{j/2}^2)_x(\dot{q}_0^2)_w - 2(q_0^2)_w(r_{j/2}^2)_x(\dot{q}_0^2)_z - 2(q_0^2)_y(r_{j/2}^2)_x(\dot{q}_0^2)_x - 2(q_0^2)_x(r_{j/2}^2)_x(\dot{q}_0^2)_y \\
-                               &+ 2(q_0^2)_x(r_{j/2}^2)_z(\dot{q}_0^2)_w + 2(q_0^2)_w(r_{j/2}^2)_z(\dot{q}_0^2)_x - 2(q_0^2)_z(r_{j/2}^2)_z(\dot{q}_0^2)_y - 2(q_0^2)_y(r_{j/2}^2)_z(\dot{q}_0^2)_z 
+                               &+ 2(q_0^2)_x(r_{j/2}^2)_z(\dot{q}_0^2)_w + 2(q_0^2)_w(r_{j/2}^2)_z(\dot{q}_0^2)_x - 2(q_0^2)_z(r_{j/2}^2)_z(\dot{q}_0^2)_y - 2(q_0^2)_y(r_{j/2}^2)_z(\dot{q}_0^2)_z
     \end{split}
 \end{align}
 \begin{align}
     \begin{split}
-        \frac{d^2\phi_{r_y}}{dt^2} &= (a_{1/0}^0)_y + 2(q_0^1)_w(r_{j/1}^1)_y(\dot{q}_0^1)_w - 2(q_0^1)_x(r_{j/1}^1)_y(\dot{q}_0^1)_x + 2(q_0^1)_y(r_{j/1}^1)_y(\dot{q}_0^1)_y - 2(q_0^1)_z(r_{j/1}^1)_y(\dot{q}_0^1)_z \\
-                                   &+ 2(q_0^1)_z(r_{j/1}^1)_x(\dot{q}_0^1)_w + 2(q_0^1)_w(r_{j/1}^1)_x(\dot{q}_0^1)_z + 2(q_0^1)_y(r_{j/1}^1)_x(\dot{q}_0^1)_x + 2(q_0^1)_x(r_{j/1}^1)_x(\dot{q}_0^1)_y \\
-                                   &- 2(q_0^1)_x(r_{j/1}^1)_z(\dot{q}_0^1)_w - 2(q_0^1)_w(r_{j/1}^1)_z(\dot{q}_0^1)_x + 2(q_0^1)_z(r_{j/1}^1)_z(\dot{q}_0^1)_y + 2(q_0^1)_y(r_{j/1}^1)_z(\dot{q}_0^1)_z \\
-                                   &- (a_{2/0}^0)_y - 2(q_0^2)_w(r_{j/2}^2)_y(\dot{q}_0^2)_w + 2(q_0^2)_x(r_{j/2}^2)_y(\dot{q}_0^2)_x - 2(q_0^2)_y(r_{j/2}^2)_y(\dot{q}_0^2)_y + 2(q_0^2)_z(r_{j/2}^2)_y(\dot{q}_0^2)_z \\
-                                   &- 2(q_0^2)_z(r_{j/2}^2)_x(\dot{q}_0^2)_w - 2(q_0^2)_w(r_{j/2}^2)_x(\dot{q}_0^2)_z - 2(q_0^2)_y(r_{j/2}^2)_x(\dot{q}_0^2)_x - 2(q_0^2)_x(r_{j/2}^2)_x(\dot{q}_0^2)_y \\
-                                   &+ 2(q_0^2)_x(r_{j/2}^2)_z(\dot{q}_0^2)_w + 2(q_0^2)_w(r_{j/2}^2)_z(\dot{q}_0^2)_x - 2(q_0^2)_z(r_{j/2}^2)_z(\dot{q}_0^2)_y - 2(q_0^2)_y(r_{j/2}^2)_z(\dot{q}_0^2)_z 
+        \frac{d^2\phi_{r_y}}{dt^2} &= (a_{1/0}^0)_y + 2(q_0^1)_w(r_{j/1}^1)_y(\ddot{q}_0^1)_w + 2(r_{j/1}^1)_y(\dot{q}_0^1)_w^2 - 2(q_0^1)_x(r_{j/1}^1)_y(\ddot{q}_0^1)_x - 2(r_{j/1}^1)_y(\dot{q}_0^1)_x^2 \\
+                                   &+ 2(q_0^1)_y(r_{j/1}^1)_y(\ddot{q}_0^1)_y + 2(r_{j/1}^1)_y(\dot{q}_0^1)_y^2 - 2(q_0^1)_z(r_{j/1}^1)_y(\ddot{q}_0^1)_z - 2(r_{j/1}^1)_y(\dot{q}_0^1)_z^2 \\
+                                   &+ 2(q_0^1)_z(r_{j/1}^1)_x(\ddot{q}_0^1)_w + 2(q_0^1)_w(r_{j/1}^1)_x(\ddot{q}_0^1)_z + 4(r_{j/1}^1)_x(\dot{q}_0^1)_w(\dot{q}_0^1)_z \\
+                                   &+ 2(q_0^1)_y(r_{j/1}^1)_x(\ddot{q}_0^1)_x + 2(q_0^1)_x(r_{j/1}^1)_x(\ddot{q}_0^1)_y + 4(r_{j/1}^1)_x(\dot{q}_0^1)_x(\dot{q}_0^1)_y \\
+                                   &- 2(q_0^1)_x(r_{j/1}^1)_z(\ddot{q}_0^1)_w - 2(q_0^1)_w(r_{j/1}^1)_z(\ddot{q}_0^1)_x - 4(r_{j/1}^1)_z(\dot{q}_0^1)_w(\dot{q}_0^1)_x \\
+                                   &+ 2(q_0^1)_z(r_{j/1}^1)_z(\ddot{q}_0^1)_y + 2(q_0^1)_y(r_{j/1}^1)_z(\ddot{q}_0^1)_z + 4(r_{j/1}^1)_z(\dot{q}_0^1)_y(\dot{q}_0^1)_z \\
+                                   &- (a_{2/0}^0)_y - 2(q_0^2)_w(r_{j/2}^2)_y(\ddot{q}_0^2)_w - 2(r_{j/2}^2)_y(\dot{q}_0^2)_w^2 + 2(q_0^2)_x(r_{j/2}^2)_y(\ddot{q}_0^2)_x + 2(r_{j/2}^2)_y(\dot{q}_0^2)_x^2 \\
+                                   &- 2(q_0^2)_y(r_{j/2}^2)_y(\ddot{q}_0^2)_y - 2(r_{j/2}^2)_y(\dot{q}_0^2)_y^2 + 2(q_0^2)_z(r_{j/2}^2)_y(\ddot{q}_0^2)_z + 2(r_{j/2}^2)_y(\dot{q}_0^2)_z^2 \\
+                                   &- 2(q_0^2)_z(r_{j/2}^2)_x(\ddot{q}_0^2)_w - 2(q_0^2)_w(r_{j/2}^2)_x(\ddot{q}_0^2)_z - 4(r_{j/2}^2)_x(\dot{q}_0^2)_w(\dot{q}_0^2)_z \\
+                                   &- 2(q_0^2)_y(r_{j/2}^2)_x(\ddot{q}_0^2)_x - 2(q_0^2)_x(r_{j/2}^2)_x(\ddot{q}_0^2)_y - 4(r_{j/2}^2)_x(\dot{q}_0^2)_x(\dot{q}_0^2)_y \\
+                                   &+ 2(q_0^2)_x(r_{j/2}^2)_z(\ddot{q}_0^2)_w + 2(q_0^2)_w(r_{j/2}^2)_z(\ddot{q}_0^2)_x + 4(r_{j/2}^2)_z(\dot{q}_0^2)_w(\dot{q}_0^2)_x \\
+                                   &- 2(q_0^2)_z(r_{j/2}^2)_z(\ddot{q}_0^2)_y - 2(q_0^2)_y(r_{j/2}^2)_z(\ddot{q}_0^2)_z - 4(r_{j/2}^2)_z(\dot{q}_0^2)_y(\dot{q}_0^2)_z 
     \end{split}
 \end{align}
 \begin{align}
@@ -267,18 +275,42 @@ We can now go equation by equation, taking the second derivative of the holonomi
 \end{align}
 \begin{align}
     \begin{split}
-        \frac{d\phi_{q_x}}{dt} &= (\dot{q}_1^j)_w(q_0^1)_x + (q_1^j)_w(\dot{q}_0^1)_x + (\dot{q}_1^j)_x(q_0^1)_w + (q_1^j)_x(\dot{q}_0^1)_w \\
-                               &+ (\dot{q}_1^j)_y(q_0^1)_z + (q_1^j)_y(\dot{q}_0^1)_z - (\dot{q}_1^j)_z(q_0^1)_y - (q_1^j)_z(\dot{q}_0^1)_y \\
-                               &- (\dot{q}_2^j)_w(q_0^2)_x - (q_2^j)_w(\dot{q}_0^2)_x - (\dot{q}_2^j)_x(q_0^2)_w - (q_2^j)_x(\dot{q}_0^2)_w \\
-                               &- (\dot{q}_2^j)_y(q_0^2)_z - (q_2^j)_y(\dot{q}_0^2)_z + (\dot{q}_2^j)_z(q_0^2)_y + (q_2^j)_z(\dot{q}_0^2)_y
+        \frac{d^2\phi_{r_z}}{dt^2} &= (a_{1/0}^0)_z + 2(q_0^1)_w(r_{j/1}^1)_z(\ddot{q}_0^1)_w + 2(r_{j/1}^1)_z(\dot{q}_0^1)_w^2 - 2(q_0^1)_x(r_{j/1}^1)_z(\ddot{q}_0^1)_x - 2(r_{j/1}^1)_z(\dot{q}_0^1)_x^2 \\
+                                   &- 2(q_0^1)_y(r_{j/1}^1)_z(\ddot{q}_0^1)_y - 2(r_{j/1}^1)_z(\dot{q}_0^1)_y^2 + 2(q_0^1)_z(r_{j/1}^1)_z(\ddot{q}_0^1)_z + 2(r_{j/1}^1)_z(\dot{q}_0^1)_z^2 \\
+                                   &- 2(q_0^1)_y(r_{j/1}^1)_x(\ddot{q}_0^1)_w - 2(q_0^1)_w(r_{j/1}^1)_x(\ddot{q}_0^1)_y - 4(r_{j/1}^1)_x(\dot{q}_0^1)_w(\dot{q}_0^1)_y \\
+                                   &+ 2(q_0^1)_z(r_{j/1}^1)_x(\ddot{q}_0^1)_x + 2(q_0^1)_x(r_{j/1}^1)_x(\ddot{q}_0^1)_z + 4(r_{j/1}^1)_x(\dot{q}_0^1)_x(\dot{q}_0^1)_z \\
+                                   &+ 2(q_0^1)_x(r_{j/1}^1)_y(\ddot{q}_0^1)_w + 2(q_0^1)_w(r_{j/1}^1)_y(\ddot{q}_0^1)_x + 4(r_{j/1}^1)_y(\dot{q}_0^1)_w(\dot{q}_0^1)_x \\
+                                   &+ 2(q_0^1)_z(r_{j/1}^1)_y(\ddot{q}_0^1)_y + 2(q_0^1)_y(r_{j/1}^1)_y(\ddot{q}_0^1)_z + 4(r_{j/1}^1)_y(\dot{q}_0^1)_y(\dot{q}_0^1)_z \\
+                                   &- (a_{2/0}^0)_z - 2(q_0^2)_w(r_{j/2}^2)_z(\ddot{q}_0^2)_w - 2(r_{j/2}^2)_z(\dot{q}_0^2)_w^2 + 2(q_0^2)_x(r_{j/2}^2)_z(\ddot{q}_0^2)_x + 2(r_{j/2}^2)_z(\dot{q}_0^2)_x^2 \\
+                                   &+ 2(q_0^2)_y(r_{j/2}^2)_z(\ddot{q}_0^2)_y + 2(r_{j/2}^2)_z(\dot{q}_0^2)_y^2 - 2(q_0^2)_z(r_{j/2}^2)_z(\ddot{q}_0^2)_z - 2(r_{j/2}^2)_z(\dot{q}_0^2)_z^2 \\
+                                   &+ 2(q_0^2)_y(r_{j/2}^2)_x(\ddot{q}_0^2)_w + 2(q_0^2)_w(r_{j/2}^2)_x(\ddot{q}_0^2)_y + 4(r_{j/2}^2)_x(\dot{q}_0^2)_w(\dot{q}_0^2)_y \\
+                                   &- 2(q_0^2)_z(r_{j/2}^2)_x(\ddot{q}_0^2)_x - 2(q_0^2)_x(r_{j/2}^2)_x(\ddot{q}_0^2)_z - 4(r_{j/2}^2)_x(\dot{q}_0^2)_x(\dot{q}_0^2)_z \\
+                                   &- 2(q_0^2)_x(r_{j/2}^2)_y(\ddot{q}_0^2)_w - 2(q_0^2)_w(r_{j/2}^2)_y(\ddot{q}_0^2)_x - 4(r_{j/2}^2)_y(\dot{q}_0^2)_w(\dot{q}_0^2)_x \\
+                                   &- 2(q_0^2)_z(r_{j/2}^2)_y(\ddot{q}_0^2)_y - 2(q_0^2)_y(r_{j/2}^2)_y(\ddot{q}_0^2)_z - 4(r_{j/2}^2)_y(\dot{q}_0^2)_y(\dot{q}_0^2)_z
     \end{split}
 \end{align}
 \begin{align}
     \begin{split}
-        \frac{d\phi_{q_y}}{dt} &= (\dot{q}_1^j)_w(q_0^1)_y + (q_1^j)_w(\dot{q}_0^1)_y - (\dot{q}_1^j)_x(q_0^1)_z - (q_1^j)_x(\dot{q}_0^1)_z \\
-                               &+ (\dot{q}_1^j)_y(q_0^1)_w + (q_1^j)_y(\dot{q}_0^1)_w + (\dot{q}_1^j)_z(q_0^1)_x + (q_1^j)_z(\dot{q}_0^1)_x \\
-                               &- (\dot{q}_2^j)_w(q_0^2)_y - (q_2^j)_w(\dot{q}_0^2)_y + (\dot{q}_2^j)_x(q_0^2)_z + (q_2^j)_x(\dot{q}_0^2)_z \\
-                               &- (\dot{q}_2^j)_y(q_0^2)_w - (q_2^j)_y(\dot{q}_0^2)_w - (\dot{q}_2^j)_z(q_0^2)_x - (q_2^j)_z(\dot{q}_0^2)_x
+        \frac{d\phi_{q_x}}{dt} &= (q_1^j)_w(\dot{q}_0^1)_x + (q_1^j)_x(\dot{q}_0^1)_w + (q_1^j)_y(\dot{q}_0^1)_z - (q_1^j)_z(\dot{q}_0^1)_y \\
+                               &- (q_2^j)_w(\dot{q}_0^2)_x - (q_2^j)_x(\dot{q}_0^2)_w - (q_2^j)_y(\dot{q}_0^2)_z + (q_2^j)_z(\dot{q}_0^2)_y
+    \end{split}
+\end{align}
+\begin{align}
+    \begin{split}
+        \frac{d^2\phi_{q_x}}{dt^2} &= (q_1^j)_w(\ddot{q}_0^1)_x + (q_1^j)_x(\ddot{q}_0^1)_w + (q_1^j)_y(\ddot{q}_0^1)_z - (q_1^j)_z(\ddot{q}_0^1)_y \\
+                                   &- (q_2^j)_w(\ddot{q}_0^2)_x - (q_2^j)_x(\ddot{q}_0^2)_w - (q_2^j)_y(\ddot{q}_0^2)_z + (q_2^j)_z(\ddot{q}_0^2)_y
+    \end{split}
+\end{align}
+\begin{align}
+    \begin{split}
+        \frac{d\phi_{q_y}}{dt} &= (q_1^j)_w(\dot{q}_0^1)_y - (q_1^j)_x(\dot{q}_0^1)_z + (q_1^j)_y(\dot{q}_0^1)_w + (q_1^j)_z(\dot{q}_0^1)_x \\
+                               &- (q_2^j)_w(\dot{q}_0^2)_y + (q_2^j)_x(\dot{q}_0^2)_z - (q_2^j)_y(\dot{q}_0^2)_w - (q_2^j)_z(\dot{q}_0^2)_x
+    \end{split}
+\end{align}
+\begin{align}
+    \begin{split}
+        \frac{d^2\phi_{q_y}}{dt^2} &= (q_1^j)_w(\ddot{q}_0^1)_y - (q_1^j)_x(\ddot{q}_0^1)_z + (q_1^j)_y(\ddot{q}_0^1)_w + (q_1^j)_z(\ddot{q}_0^1)_x \\
+                                   &- (q_2^j)_w(\ddot{q}_0^2)_y + (q_2^j)_x(\ddot{q}_0^2)_z - (q_2^j)_y(\ddot{q}_0^2)_w - (q_2^j)_z(\ddot{q}_0^2)_x
     \end{split}
 \end{align}
 \begin{align}
@@ -288,7 +320,17 @@ We can now go equation by equation, taking the second derivative of the holonomi
 \end{align}
 \begin{align}
     \begin{split}
+        \frac{d^2\phi_{q_0^1}}{dt^2} &= 2(q_0^1)_w(\ddot{q}_0^1)_w + 2(\dot{q}_0^1)_w^2 + 2(q_0^1)_x(\ddot{q}_0^1)_x + 2(\dot{q}_0^1)_x^2 + 2(q_0^1)_y(\ddot{q}_0^1)_y + 2(\dot{q}_0^1)_y^2 + 2(q_0^1)_z(\ddot{q}_0^1)_z + 2(\dot{q}_0^1)_z^2
+    \end{split}
+\end{align}
+\begin{align}
+    \begin{split}
         \frac{d\phi_{q_0^2}}{dt} &= 2(q_0^2)_w(\dot{q}_0^2)_w + 2(q_0^2)_x(\dot{q}_0^2)_x + 2(q_0^2)_y(\dot{q}_0^2)_y + 2(q_0^2)_z(\dot{q}_0^2)_z
+    \end{split}
+\end{align}
+\begin{align}
+    \begin{split}
+        \frac{d\phi_{q_0^2}}{dt^2} &= 2(q_0^2)_w(\ddot{q}_0^2)_w + 2(\dot{q}_0^2)_w^2 + 2(q_0^2)_x(\ddot{q}_0^2)_x + 2(\dot{q}_0^2)_x^2 + 2(q_0^2)_y(\ddot{q}_0^2)_y + 2(\dot{q}_0^2)_y^2 + 2(q_0^2)_z(\ddot{q}_0^2)_z + 2(\dot{q}_0^2)_z^2
     \end{split}
 \end{align}
 \end{document}
