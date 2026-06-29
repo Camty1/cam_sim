@@ -1,0 +1,214 @@
+\documentclass{article}
+\usepackage[letterpaper, margin=1in]{geometry}
+\usepackage{amsmath}
+
+\title{UK Derivation}
+\author{Cameron Wolfe}
+\date{\today}
+
+\begin{document}
+
+\section{UK Constraints Derivation}
+
+We will simulate two six degree of freedom bodies joined by a
+revolute joint.  Let the first object be object 1, and the second
+object be object 2.  Each object has a position and an attitude.  For
+each object, the state is comprised of the inertial position and the
+inertial to body orientation represented as MRPs.
+
+\begin{align}
+    x_i &=
+    \begin{bmatrix}
+        r_{i/0}^0 \\
+        \sigma_0^i
+    \end{bmatrix}
+\end{align}
+
+The overall state being the concatenation of these two states:
+
+\begin{align}
+    x &=
+    \begin{bmatrix}
+        x_1 \\
+        x_2
+    \end{bmatrix} =
+    \begin{bmatrix}
+        r_{1/0}^0 \\
+        \sigma_0^1 \\
+        r_{2/0}^0 \\
+        \sigma_0^2
+    \end{bmatrix}
+\end{align}
+
+There are two parts of the constraint, positional and rotational.
+Let $r_{j/1}^1$ represent the position of the joint on body one in
+the body frame, and $j_1$ be the direction vector of the joint
+on body one in the body frame.
+
+The position and rotation constraints are:
+
+\begin{align}
+    \phi_r &= r_{1/0}^0 + C((\sigma_0^1)^{-1})r_{j/1}^1 - r_{2/0}^0 -
+    C((\sigma_0^2)^{-1})r_{j/2}^2 \\
+    \phi_\sigma &=
+    (C((\sigma_0^1)^{-1})j_1)\times(C((\sigma_0^2)^{-1})j_2)
+\end{align}
+
+Where $C(\sigma)$ is the DCM derived from the MRPs (using the
+following formula):
+
+\begin{align}
+    C(\sigma) &= I -
+    \frac{4(1-\sigma^T\sigma)}{(1+\sigma^T\sigma)^2}\tilde{\sigma} +
+    \frac{8}{(1+\sigma^T\sigma)^2}\tilde{\sigma}^2
+\end{align}
+
+With these two constraints defined, we can take the second derivative to get the
+constraint equations $A\ddot{x}=b$.
+
+\begin{align}
+    \phi_r &= r_{1/0}^0 + C((\sigma_0^1)^{-1})r_{j/1}^1 - r_{2/0}^0 -
+    C((\sigma_0^2)^{-1})r_{j/2}^2 \\
+    \begin{split}
+        \frac{d\phi_r}{dt} &= \dot{r}_{1/0}^0 + \dot{C}((\sigma_0^1)^{-1})r_{j/1}^1 -
+        \dot{r}_{2/0}^0 - \dot{C}((\sigma_0^2)^{-1})r_{j/2}^2 \\
+        &= \dot{r}_{1/0}^0 + C((\sigma_0^1)^{-1})\tilde{\omega}_{1/0}^1r_{j/1}^1 -
+        \dot{r}_{2/0}^0 - C((\sigma_0^2)^{-1})\tilde{\omega}_{2/0}^2r_{j/2}^2
+    \end{split} \\
+    \begin{split}
+        \frac{d^2\phi_r}{dt^2} &= \ddot{r}_{1/0}^0 +
+        C((\sigma_0^1)^{-1})\tilde{\alpha}_{1/0}^1r_{j/1}^1 +
+        C((\sigma_0^1)^{-1})(\tilde{\omega}_{1/0}^1)^2r_{j/1}^1 \\
+        &- \ddot{r}_{2/0}^0 - C((\sigma_0^2)^{-1})\tilde{\alpha}_{2/0}^2r_{j/2}^2 -
+        C((\sigma_0^2)^{-1})(\tilde{\omega}_{2/0}^2)^2r_{j/2}^2
+    \end{split} \\
+    \begin{split}
+        \label{eqn:ddot_phi_r}
+        \frac{d^2\phi_r}{dt^2} &= \ddot{r}_{1/0}^0 -
+        C((\sigma_0^1)^{-1})\tilde{r}_{j/1}^1\alpha_{1/0}^1 +
+        C((\sigma_0^1)^{-1})(\tilde{\omega}_{1/0}^1)^2r_{j/1}^1 \\
+        &- \ddot{r}_{2/0}^0 + C((\sigma_0^2)^{-1})\tilde{r}_{j/2}^2\alpha_{2/0}^2 -
+        C((\sigma_0^2)^{-1})(\tilde{\omega}_{2/0}^2)^2r_{j/2}^2
+    \end{split}
+\end{align}
+
+Before stepping into $\phi_\sigma$, let us define some terms that will be useful, and
+take their derivatives:
+
+\begin{align}
+    u &= C((\sigma_0^1)^{-1})j_1 \\
+    \dot{u} &= C((\sigma_0^1)^{-1})\tilde{\omega}_{1/0}^1j_1 \\
+    \begin{split}
+        \ddot{u} &= C((\sigma_0^1)^{-1})\tilde{\alpha}_{1/0}^1j_1 +
+        C((\sigma_0^1)^{-1})(\tilde{\omega}_{1/0}^1)^2j_1 \\
+        &= -C((\sigma_0^1)^{-1})\tilde{j}_1\alpha_{1/0}^1 +
+        C((\sigma_0^1)^{-1})(\tilde{\omega}_{1/0}^1)^2j_1
+    \end{split} \\
+    v &= C((\sigma_0^2)^{-1})j_2 \\
+    \dot{v} &= C((\sigma_0^2)^{-1})\tilde{\omega}_{2/0}^2j_2 \\
+    \begin{split}
+        \ddot{v} &= C((\sigma_0^2)^{-1})\tilde{\alpha}_{2/0}^2j_2 +
+        C((\sigma_0^2)^{-1})(\tilde{\omega}_{2/0}^2)^2j_2 \\
+        &= -C((\sigma_0^2)^{-1})\tilde{j}_2\alpha_{2/0}^2 +
+        C((\sigma_0^2)^{-1})(\tilde{\omega}_{2/0}^2)^2j_2
+    \end{split}
+\end{align}
+
+\begin{align}
+    \phi_\sigma &= u\times v\\
+    \begin{split}
+        \frac{d\phi_\sigma}{dt} &= \dot{u}\times v + u \times\dot{v}
+        \\&=
+        (C((\sigma_0^1)^{-1})\tilde{\omega}_{1/0}^1j_1)\times v +
+        u\times(C((\sigma_0^2)^{-1})\tilde{\omega}_{2/0}^2j_2)
+    \end{split} \\
+    \begin{split}
+        \label{eqn:ddot_phi_sigma}
+        \frac{d^2\phi_\sigma}{dt^2} &= \ddot{u}\times v + 2\dot{u}\times\dot{v} + u\times\ddot{v} \\
+        &= (-C((\sigma_0^1)^{-1})\tilde{j}_1\alpha_{1/0}^1 +
+        C((\sigma_0^1)^{-1})(\tilde{\omega}_{1/0}^1)^2j_1) \times v \\
+        &+
+        2(C((\sigma_0^1)^{-1})\tilde{\omega}_{1/0}^1j_1) \times
+        (C((\sigma_0^2)^{-1})\tilde{\omega}_{2/0}^2j_2) \\
+        &+ u\times(-C((\sigma_0^2)^{-1})\tilde{j}_2\alpha_{2/0}^2 +
+        C((\sigma_0^2)^{-1})(\tilde{\omega}_{2/0}^2)^2j_2)
+    \end{split}
+\end{align}
+
+In their current form, we cannot use these expressions, as we need to get rid of the angular
+acceleration terms (and replace them with $\ddot{\sigma})$.  We can start with the
+dynamics equation for MRPs relating $\dot{\sigma}$ to $\omega$, and differentiate it.
+
+\begin{align}
+    \omega &= 4B^{-1}\dot{\sigma} = 4\frac{(1-\sigma^T\sigma)I - 2\tilde{\sigma} +
+    2\sigma\sigma^T}{(1+\sigma^T\sigma)^2}\dot{\sigma} \\
+    \begin{split}
+        \alpha &= 4B^{-1}\ddot{\sigma} + 4\dot{B}^{-1}\dot{\sigma}
+        \label{eqn:alpha_to_sigma}
+    \end{split} \\
+    \dot{B}^{-1} &= \frac{(-2\sigma^T\dot{\sigma}I - 2\tilde{\dot{\sigma}} +
+        2\dot{\sigma}\sigma^T + 2\sigma\dot{\sigma}^T)(1 + \sigma^T\sigma) -
+    4\sigma^T\dot{\sigma}((1 - \sigma^T\sigma)I - 2\tilde{\sigma} + 2\sigma\sigma^T)}{(1
+    + \sigma^T\sigma)^3}
+\end{align}
+
+Plugging Equation \eqref{eqn:alpha_to_sigma} into Equations \eqref{eqn:ddot_phi_r} and
+\eqref{eqn:ddot_phi_sigma}, we get:
+
+\begin{align}
+    \begin{split}
+        \frac{d^2\phi_r}{dt^2} &= \ddot{r}_{1/0}^0 -
+        C((\sigma_0^1)^{-1})\tilde{r}_{j/1}^1(4B(\sigma_0^1)^{-1}\ddot{\sigma}_0^1 +
+        4(\dot{B}(\sigma_0^1))^{-1}\dot{\sigma}_0^1) +
+        C((\sigma_0^1)^{-1})(\tilde{\omega}_{1/0}^1)^2r_{j/1}^1 \\
+        &- \ddot{r}_{2/0}^0 +
+        C((\sigma_0^2)^{-1})\tilde{r}_{j/2}^2(4B(\sigma_0^2)^{-1}\ddot{\sigma}_0^2 +
+        4(\dot{B}(\sigma_0^2))^{-1}\dot{\sigma}_0^2) -
+        C((\sigma_0^2)^{-1})(\tilde{\omega}_{2/0}^2)^2r_{j/2}^2
+    \end{split} \\
+    \begin{split}
+        \frac{d^2\phi_\sigma}{dt^2} &=
+        (-C((\sigma_0^1)^{-1})\tilde{j}_1(4B(\sigma_0^1)^{-1}\ddot{\sigma}_0^1 +
+            4(\dot{B}(\sigma_0^1))^{-1}\dot{\sigma}_0^1) +
+        C((\sigma_0^1)^{-1})(\tilde{\omega}_{1/0}^1)^2j_1) \times v \\
+        &+ 2(C((\sigma_0^1)^{-1})\tilde{\omega}_{1/0}^1j_1) \times
+        (C((\sigma_0^2)^{-1})\tilde{\omega}_{2/0}^2j_2) \\
+        &+ u\times(-C((\sigma_0^2)^{-1})\tilde{j}_2(4B(\sigma_0^2)^{-1}\ddot{\sigma}_0^2 +
+            4(\dot{B}(\sigma_0^2))^{-1}\dot{\sigma}_0^2) +
+        C((\sigma_0^2)^{-1})(\tilde{\omega}_{2/0}^2)^2j_2)
+    \end{split}
+\end{align}
+
+Using these, we can get $A$ and $b$ for our UK constraint equation
+
+\begin{align}
+    A =
+    \begin{bmatrix}
+        I_3 & -4C((\sigma_0^1)^{-1})\tilde{r}_{j/1}^1B(\sigma_0^1)^{-1} & -I_3 &
+        4C((\sigma_0^2)^{-1})\tilde{r}_{j/2}^2B(\sigma_0^2)^{-1} \\
+        0_{3\times3} & 4\tilde{v}C((\sigma_0^1)^{-1})\tilde{j}_1B(\sigma_0^1)^{-1} &
+        0_{3\times3} & -4\tilde{u}C((\sigma_0^2)^{-1})\tilde{j}_2B(\sigma_0^2)^{-1}
+    \end{bmatrix}
+\end{align}
+\begin{align}
+    \begin{split}
+        b_r &=
+        4C((\sigma_0^1)^{-1})\tilde{r}_{j/1}^1(\dot{B}(\sigma_0^1))^{-1}\dot{\sigma}_0^1
+        - C((\sigma_0^1)^{-1})(\tilde{\omega}_{1/0}^1)^2r_{j/1}^1 \\
+        &-
+        4C((\sigma_0^2)^{-1})\tilde{r}_{j/2}^2(\dot{B}(\sigma_0^2))^{-1}\dot{\sigma}_0^2
+        + C((\sigma_0^2)^{-1})(\tilde{\omega}_{2/0}^2)^2r_{j/2}^2
+    \end{split} \\
+    \begin{split}
+        b_\sigma &=
+        -4\tilde{v}C((\sigma_0^1)^{-1})\tilde{j}_1(\dot{B}(\sigma_0^1))^{-1}\dot{\sigma}_0^1
+        + \tilde{v}C((\sigma_0^1)^{-1})(\tilde{\omega}_{1/0}^1)^2j_1 \\
+        &- 2(C((\sigma_0^1)^{-1})\tilde{\omega}_{1/0}^1j_1) \times
+        (C((\sigma_0^2)^{-1})\tilde{\omega}_{2/0}^2j_2) \\
+        &+
+        4\tilde{u}C((\sigma_0^2)^{-1})\tilde{j}_2(\dot{B}(\sigma_0^2))^{-1}\dot{\sigma}_0^2
+        - \tilde{u}C((\sigma_0^2)^{-1})(\tilde{\omega}_{2/0}^2)^2j_2
+    \end{split}
+\end{align}
+
+\end{document}
