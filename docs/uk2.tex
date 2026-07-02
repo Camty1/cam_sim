@@ -211,4 +211,41 @@ Using these, we can get $A$ and $b$ for our UK constraint equation
     \end{split}
 \end{align}
 
+\section{UK Dynamics Derivation}
+
+The equations of motion for this rigidbody can be broken into two parts, the translational equations of motion, and the rotational equations of motion.  The translational equations are pretty simple.
+
+\begin{align}
+    m_i\ddot{r}_{i/0}^0 &= F
+\end{align}
+
+The rotational equations of motion come from euler equations:
+
+\begin{align}
+    I_i^i\dot{\omega} &= M - \omega\times I_i^i\omega
+\end{align}
+
+However, we need to get this in terms of $\ddot{\sigma}_0^i$.
+
+\begin{align}
+    \dot{\sigma} &= \frac{B(\sigma)}{4}\omega \\
+    \ddot{\sigma} &= \frac{1}{4}(\dot{B}(\sigma)\omega + B\dot{\omega}) \\
+                  &= \frac{1}{4}(\dot{B}(\sigma)\omega + B((I_i^i)^{-1}M - (I_i^i)^{-1}\tilde{\omega}I_i^i\omega))
+\end{align}
+
+This gives us the overall equations of motion (per body) as
+
+\begin{align}
+    \begin{bmatrix}
+        m_iI_3 & 0_{3 \times 3} \\
+        0_{3 \times 3} & 4I_3
+        \end{bmatrix} \begin{bmatrix}
+        \ddot{r}_{i/0}^0 \\
+        \ddot{\sigma}_0^i
+        \end{bmatrix} = \begin{bmatrix}
+        F \\
+        \dot{B}(\sigma)\omega + B((I_i^i)^{-1}M - (I_i^i)^{-1}\tilde{\omega}I_i^i\omega)
+    \end{bmatrix}
+\end{align}
+
 \end{document}
