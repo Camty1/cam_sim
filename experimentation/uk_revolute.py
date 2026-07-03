@@ -1,6 +1,10 @@
 from dataclasses import dataclass, field
 
+import matplotlib.pyplot as plt
 import numpy as np
+from scipy.integrate import solve_ivp
+
+np.set_printoptions(threshold=np.inf, linewidth=250)
 
 
 def tilde(v: np.ndarray) -> np.ndarray:
@@ -8,7 +12,14 @@ def tilde(v: np.ndarray) -> np.ndarray:
     Creates skew symmetric tilde matrix
     """
     assert len(v) == 3
-    return np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
+
+    return np.array(
+        [
+            [0, -v[2].item(), v[1].item()],
+            [v[2].item(), 0, -v[0].item()],
+            [-v[1].item(), v[0].item(), 0],
+        ]
+    )
 
 
 def mrp_to_dcm(sigma: np.ndarray) -> np.ndarray:
@@ -93,15 +104,21 @@ class RigidbodyKinematics:
     Derived kinematic properties of a Rigidbody used in calculation
     """
 
-    c_0_to_body: np.ndarray = np.zeros((3, 3))
-    c_body_to_0: np.ndarray = np.zeros((3, 3))
-    b: np.ndarray = np.zeros((3, 3))
-    b_inv: np.ndarray = np.zeros((3, 3))
-    b_dot: np.ndarray = np.zeros((3, 3))
-    b_inv_dot: np.ndarray = np.zeros((3, 3))
-    omega_body_wrt_0_in_body: np.ndarray = np.zeros((3, 1))
-    tilde_omega_body_wrt_0_in_body: np.ndarray = np.zeros((3, 3))
-    tilde_omega_body_wrt_0_in_body_squared: np.ndarray = np.zeros((3, 3))
+    c_0_to_body: np.ndarray = field(default_factory=lambda: np.zeros((3, 3)))
+    c_body_to_0: np.ndarray = field(default_factory=lambda: np.zeros((3, 3)))
+    b: np.ndarray = field(default_factory=lambda: np.zeros((3, 3)))
+    b_inv: np.ndarray = field(default_factory=lambda: np.zeros((3, 3)))
+    b_dot: np.ndarray = field(default_factory=lambda: np.zeros((3, 3)))
+    b_inv_dot: np.ndarray = field(default_factory=lambda: np.zeros((3, 3)))
+    omega_body_wrt_0_in_body: np.ndarray = field(
+        default_factory=lambda: np.zeros((3, 1))
+    )
+    tilde_omega_body_wrt_0_in_body: np.ndarray = field(
+        default_factory=lambda: np.zeros((3, 3))
+    )
+    tilde_omega_body_wrt_0_in_body_squared: np.ndarray = field(
+        default_factory=lambda: np.zeros((3, 3))
+    )
 
 
 @dataclass
@@ -111,7 +128,9 @@ class RigidbodyDerivedMassProperties:
     """
 
     initialized: bool = False
-    inertia_inv_body_wrt_cm_in_body: np.ndarray = np.zeros((3, 3))
+    inertia_inv_body_wrt_cm_in_body: np.ndarray = field(
+        default_factory=lambda: np.zeros((3, 3))
+    )
 
 
 @dataclass
@@ -142,7 +161,6 @@ class Rigidbody:
         assert self.v_body_wrt_0_in_0.shape == (3, 1)
         assert self.sigma_dot_0_to_body.shape == (3, 1)
         assert self.body_num >= 0
-        self.calculate_derived_mass_properties()
 
     def initialize_derived_mass_properties(self) -> None:
         """
@@ -208,7 +226,7 @@ class Rigidbody:
             )
         )
 
-        return np.stack(
+        return np.concatenate(
             [scaled_r_ddot_body_wrt_0_in_0, scaled_sigma_ddot_0_to_body], axis=0
         )
 
@@ -219,16 +237,36 @@ class RevoluteJointKinematics:
     Derived kinematic properties of a RevoluteJoint used in calculation
     """
 
-    tilde_r_joint_wrt_1_in_1: np.ndarray = np.zeros((3, 3))
-    tilde_r_joint_wrt_2_in_2: np.ndarray = np.zeros((3, 3))
-    tilde_joint_direction_in_1: np.ndarray = np.zeros((3, 3))
-    tilde_joint_direction_in_2: np.ndarray = np.zeros((3, 3))
-    body1_joint_direction_in_0: np.ndarray = np.zeros((3, 1))
-    body2_joint_direction_in_0: np.ndarray = np.zeros((3, 1))
-    tilde_body1_joint_direction_in_0: np.ndarray = np.zeros((3, 3))
-    tilde_body2_joint_direction_in_0: np.ndarray = np.zeros((3, 3))
-    body1_joint_direction_dot_in_0: np.ndarray = np.zeros((3, 1))
-    body2_joint_direction_dot_in_0: np.ndarray = np.zeros((3, 1))
+    tilde_r_joint_wrt_1_in_1: np.ndarray = field(
+        default_factory=lambda: np.zeros((3, 3))
+    )
+    tilde_r_joint_wrt_2_in_2: np.ndarray = field(
+        default_factory=lambda: np.zeros((3, 3))
+    )
+    tilde_joint_direction_in_1: np.ndarray = field(
+        default_factory=lambda: np.zeros((3, 3))
+    )
+    tilde_joint_direction_in_2: np.ndarray = field(
+        default_factory=lambda: np.zeros((3, 3))
+    )
+    body1_joint_direction_in_0: np.ndarray = field(
+        default_factory=lambda: np.zeros((3, 1))
+    )
+    body2_joint_direction_in_0: np.ndarray = field(
+        default_factory=lambda: np.zeros((3, 1))
+    )
+    tilde_body1_joint_direction_in_0: np.ndarray = field(
+        default_factory=lambda: np.zeros((3, 3))
+    )
+    tilde_body2_joint_direction_in_0: np.ndarray = field(
+        default_factory=lambda: np.zeros((3, 3))
+    )
+    body1_joint_direction_dot_in_0: np.ndarray = field(
+        default_factory=lambda: np.zeros((3, 1))
+    )
+    body2_joint_direction_dot_in_0: np.ndarray = field(
+        default_factory=lambda: np.zeros((3, 1))
+    )
 
 
 @dataclass
@@ -266,8 +304,12 @@ class RevoluteJoint:
         self.kinematics.tilde_r_joint_wrt_2_in_2 = tilde(self.r_joint_wrt_2_in_2)
         self.kinematics.tilde_joint_direction_in_1 = tilde(self.joint_direction_in_1)
         self.kinematics.tilde_joint_direction_in_2 = tilde(self.joint_direction_in_2)
-        self.kinematics.body1_joint_direction_in_0 = body1.kinematics.c_body_to_0 @ self.joint_direction_in_1
-        self.kinematics.body2_joint_direction_in_0 = body2.kinematics.c_body_to_0 @ self.joint_direction_in_2
+        self.kinematics.body1_joint_direction_in_0 = (
+            body1.kinematics.c_body_to_0 @ self.joint_direction_in_1
+        )
+        self.kinematics.body2_joint_direction_in_0 = (
+            body2.kinematics.c_body_to_0 @ self.joint_direction_in_2
+        )
         self.kinematics.tilde_body1_joint_direction_in_0 = tilde(
             self.kinematics.body1_joint_direction_in_0
         )
@@ -293,10 +335,10 @@ class MultiRigidbodyDerivedMassProperties:
     """
 
     initialized: bool = False
-    mass_matrix: np.ndarray = np.zeros(0)
-    mass_matrix_inv: np.ndarray = np.zeros(0)
-    mass_matrix_sqrt: np.ndarray = np.zeros(0)
-    mass_matrix_inv_sqrt: np.ndarray = np.zeros(0)
+    mass_matrix: np.ndarray = field(default_factory=lambda: np.zeros(0))
+    mass_matrix_inv: np.ndarray = field(default_factory=lambda: np.zeros(0))
+    mass_matrix_sqrt: np.ndarray = field(default_factory=lambda: np.zeros(0))
+    mass_matrix_inv_sqrt: np.ndarray = field(default_factory=lambda: np.zeros(0))
 
 
 @dataclass
@@ -376,8 +418,17 @@ class MultiRigidbody:
         self.derived_mass_properties.mass_matrix = np.zeros(
             (6 * len(self.bodies), 6 * len(self.bodies))
         )
+        self.derived_mass_properties.mass_matrix_inv = np.zeros(
+            (6 * len(self.bodies), 6 * len(self.bodies))
+        )
+        self.derived_mass_properties.mass_matrix_sqrt = np.zeros(
+            (6 * len(self.bodies), 6 * len(self.bodies))
+        )
+        self.derived_mass_properties.mass_matrix_inv_sqrt = np.zeros(
+            (6 * len(self.bodies), 6 * len(self.bodies))
+        )
         for body_idx, body in enumerate(self.bodies):
-            body.
+            body.initialize_derived_mass_properties()
             start_idx = 6 * body_idx
             end_idx = 6 * (body_idx + 1)
             self.derived_mass_properties.mass_matrix[
@@ -408,6 +459,7 @@ class MultiRigidbody:
 
         self.derived_mass_properties.initialized = True
 
+    @property
     def state(self) -> np.ndarray:
         """
         Returns x
@@ -417,8 +469,16 @@ class MultiRigidbody:
             body_states.append(body.r_body_wrt_0_in_0)
             body_states.append(body.sigma_0_to_body)
 
-        return np.stack(body_states)
+        return np.concatenate(body_states)
 
+    @state.setter
+    def state(self, val: np.ndarray) -> None:
+        assert val.shape == (len(self.bodies) * 6, 1)
+        for body_idx, body in enumerate(self.bodies):
+            body.r_body_wrt_0_in_0 = val[body_idx * 6 : body_idx * 6 + 3]
+            body.sigma_0_to_body = val[body_idx * 6 + 3 : body_idx * 6 + 6]
+
+    @property
     def state_dot(self) -> np.ndarray:
         """
         Returns x_dot
@@ -428,7 +488,14 @@ class MultiRigidbody:
             body_state_dots.append(body.v_body_wrt_0_in_0)
             body_state_dots.append(body.sigma_dot_0_to_body)
 
-        return np.stack(body_state_dots)
+        return np.concatenate(body_state_dots)
+
+    @state_dot.setter
+    def state_dot(self, val: np.ndarray) -> None:
+        assert val.shape == (len(self.bodies) * 6, 1)
+        for body_idx, body in enumerate(self.bodies):
+            body.v_body_wrt_0_in_0 = val[body_idx * 6 : body_idx * 6 + 3]
+            body.sigma_dot_0_to_body = val[body_idx * 6 + 3 : body_idx * 6 + 6]
 
     def populate_kinematics(self) -> None:
         """
@@ -450,9 +517,13 @@ class MultiRigidbody:
         for body in self.bodies:
             body_scaled_state_ddots.append(body.unconstrained_dynamics())
 
-        return np.stack(body_scaled_state_ddots, axis=0)
+        return np.concatenate(body_scaled_state_ddots, axis=0)
 
-    def uk_a_matrix_and_b_vector(self) -> tuple[np.ndarray, np.ndarray]:
+    def uk_a_matrix_b_vector_with_baumgarte(
+        self,
+        alpha: float = 10,
+        beta: float = 10,
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Gets the UK A matrix and b vector from looping through constraints
         """
@@ -461,6 +532,8 @@ class MultiRigidbody:
 
         a_matrix = np.zeros((n_constraint_eqns, state_dim))
         b_vector = np.zeros((n_constraint_eqns, 1))
+        phi_vector = np.zeros((n_constraint_eqns, 1))
+        phi_dot_vector = np.zeros((n_constraint_eqns, 1))
 
         for joint_idx, joint in enumerate(self.joints):
             # Get bodies
@@ -523,7 +596,7 @@ class MultiRigidbody:
                 + body2.kinematics.c_body_to_0
                 @ body2.kinematics.tilde_omega_body_wrt_0_in_body_squared
                 @ joint.r_joint_wrt_2_in_2
-            )
+            ).flatten()
             b_vector[rotation_constraint_slice, 0] = (
                 -4
                 * joint.kinematics.tilde_body2_joint_direction_in_0
@@ -533,7 +606,7 @@ class MultiRigidbody:
                 @ body1.sigma_dot_0_to_body
                 + joint.kinematics.tilde_body2_joint_direction_in_0
                 @ body1.kinematics.c_body_to_0
-                @ body1.kinematics.tilde_omega_body_wrt_0_in_body
+                @ body1.kinematics.tilde_omega_body_wrt_0_in_body_squared
                 @ joint.joint_direction_in_1
                 - 2
                 * tilde(joint.kinematics.body1_joint_direction_dot_in_0)
@@ -546,9 +619,25 @@ class MultiRigidbody:
                 @ body2.sigma_dot_0_to_body
                 - joint.kinematics.tilde_body1_joint_direction_in_0
                 @ body2.kinematics.c_body_to_0
-                @ body2.kinematics.tilde_omega_body_wrt_0_in_body
+                @ body2.kinematics.tilde_omega_body_wrt_0_in_body_squared
                 @ joint.joint_direction_in_2
-            )
+            ).flatten()
+
+            phi_vector[position_constraint_slice, 0] = (
+                body1.r_body_wrt_0_in_0
+                + body1.kinematics.c_body_to_0 @ joint.r_joint_wrt_1_in_1
+                - body2.r_body_wrt_0_in_0
+                - body2.kinematics.c_body_to_0 @ joint.r_joint_wrt_2_in_2
+            ).flatten()
+            phi_vector[rotation_constraint_slice, 0] = (
+                joint.kinematics.tilde_body1_joint_direction_in_0
+                @ joint.kinematics.body2_joint_direction_in_0
+            ).flatten()
+
+        phi_dot_vector = a_matrix @ self.state_dot
+
+        # Apply baumgarte stabilization to b_vector
+        b_vector = b_vector - 2 * alpha * phi_dot_vector - beta**2 * phi_vector
 
         return a_matrix, b_vector
 
@@ -562,14 +651,93 @@ class MultiRigidbody:
             raise ValueError("Derived mass properties have not been initialized")
         self.populate_kinematics()
         q = self.unconstrained_dynamics()
-        a_matrix, b_vector = self.uk_a_matrix_and_b_vector()
+        a_matrix, b_vector = self.uk_a_matrix_b_vector_with_baumgarte()
 
         # Precompute common terms
         mass_matrix_inv_q = self.derived_mass_properties.mass_matrix_inv @ q
-        a_matrix_mass_matrix_inv = a_matrix @ self.derived_mass_properties.mass_matrix_inv
+        a_matrix_mass_matrix_inv = (
+            a_matrix @ self.derived_mass_properties.mass_matrix_inv
+        )
 
         # Solve UK dynamics
-        lambda_vec = np.linalg.solve(a_matrix_mass_matrix_inv @ a_matrix.T, b_vector - a_matrix_mass_matrix_inv @ q)
-        x_ddot = mass_matrix_inv_q + self.derived_mass_properties.mass_matrix_inv @ a_matrix.T @ lambda_vec
+        lambda_vec = np.linalg.lstsq(
+            a_matrix_mass_matrix_inv @ a_matrix.T,
+            b_vector - a_matrix_mass_matrix_inv @ q,
+        )[0]
+        x_ddot = (
+            mass_matrix_inv_q
+            + self.derived_mass_properties.mass_matrix_inv @ a_matrix.T @ lambda_vec
+        )
 
         return x_ddot
+
+
+def main() -> None:
+    mrb = MultiRigidbody()
+    mrb.add_body(
+        1,
+        np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
+        v_body_wrt_0_in_0=np.array([[0], [-1], [0]]),
+    )
+    mrb.add_body(
+        1,
+        np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
+        r_body_wrt_0_in_0=np.array([[1], [0], [0]]),
+        v_body_wrt_0_in_0=np.array([[0], [1], [0]]),
+    )
+    mrb.add_joint(
+        0,
+        1,
+        np.array([[0.5], [0], [0]]),
+        -np.array([[0.5], [0], [0]]),
+    )
+    mrb.initialize_derived_mass_properties()
+
+    def integration_wrapper(t: float, x: np.ndarray) -> np.ndarray:
+        state = x[:12].reshape((12, 1))
+        state_dot = x[12:].reshape((12, 1))
+        mrb.state = state
+        mrb.state_dot = state_dot
+
+        state_ddot = mrb.uk_dynamics()
+
+        return np.concatenate([state_dot, state_ddot], axis=0).flatten()
+
+    NUM_STEPS = 1000
+    dt = 0.01
+    states = np.zeros((NUM_STEPS + 1, 12))
+    states[0, :] = mrb.state.flatten()
+    state_dots = np.zeros((NUM_STEPS + 1, 12))
+    state_dots[0, :] = mrb.state_dot.flatten()
+    t = np.arange(NUM_STEPS + 1) * dt
+    for i in range(NUM_STEPS):
+        t_span = t[i : i + 2]
+        out = solve_ivp(
+            integration_wrapper,
+            t_span,
+            np.concatenate([states[i, :], state_dots[i, :]]),
+        )
+        new_state = out.y[:, -1]
+        states[i + 1, :] = new_state[:12]
+        sigma_0_to_1 = states[i + 1, 3:6]
+        if (sigma_0_to_1_norm_squared := sigma_0_to_1 @ sigma_0_to_1) > 1:
+            sigma_0_to_1 = -sigma_0_to_1 / sigma_0_to_1_norm_squared
+        states[i + 1, 3:6] = sigma_0_to_1
+        sigma_0_to_2 = states[i + 1, 9:12]
+        if (sigma_0_to_2_norm_squared := sigma_0_to_2 @ sigma_0_to_2) > 1:
+            sigma_0_to_2 = -sigma_0_to_2 / sigma_0_to_2_norm_squared
+        states[i + 1, 9:12] = sigma_0_to_2
+        state_dots[i + 1, :] = new_state[12:]
+
+    plt.figure()
+    plt.plot(states[:, 0], states[:, 1])
+    plt.plot(states[:, 6], states[:, 7])
+
+    plt.figure()
+    plt.plot(t, states[:, 3:6])
+    plt.plot(t, states[:, 9:12], linestyle="--")
+    plt.show()
+
+
+if __name__ == "__main__":
+    main()
