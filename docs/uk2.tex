@@ -135,79 +135,69 @@ take their derivatives:
     \end{split}
 \end{align}
 
-In their current form, we cannot use these expressions, as we need to get rid of the angular
-acceleration terms (and replace them with $\ddot{\sigma})$.  We can start with the
-dynamics equation for MRPs relating $\dot{\sigma}$ to $\omega$, and differentiate it.
-
+Let us define $q$ as the "quasi-velocity" vector:
 \begin{align}
-    \omega &= 4B^{-1}\dot{\sigma} = 4\frac{(1-\sigma^T\sigma)I - 2\tilde{\sigma} +
-    2\sigma\sigma^T}{(1+\sigma^T\sigma)^2}\dot{\sigma} \\
-    \begin{split}
-        \alpha &= 4B^{-1}\ddot{\sigma} + 4\dot{B}^{-1}\dot{\sigma}
-        \label{eqn:alpha_to_sigma}
-    \end{split} \\
-    \dot{B}^{-1} &= \frac{(-2\sigma^T\dot{\sigma}I - 2\tilde{\dot{\sigma}} +
-        2\dot{\sigma}\sigma^T + 2\sigma\dot{\sigma}^T)(1 + \sigma^T\sigma) -
-    4\sigma^T\dot{\sigma}((1 - \sigma^T\sigma)I - 2\tilde{\sigma} + 2\sigma\sigma^T)}{(1
-    + \sigma^T\sigma)^3}
+    q_i &=
+    \begin{bmatrix}
+        v_{i/0}^0 \\
+        \omega_{i/0}^i
+    \end{bmatrix}
+\end{align}
+\begin{align}
+    q &=
+    \begin{bmatrix}
+        q_1 \\
+        q_2
+    \end{bmatrix}
 \end{align}
 
-Plugging Equation \eqref{eqn:alpha_to_sigma} into Equations \eqref{eqn:ddot_phi_r} and
-\eqref{eqn:ddot_phi_sigma}, we get:
+Which is related to the derivative of the state $\dot{x}$ by the following relation.
 
 \begin{align}
-    \begin{split}
-        \frac{d^2\phi_r}{dt^2} &= \ddot{r}_{1/0}^0 -
-        C((\sigma_0^1)^{-1})\tilde{r}_{j/1}^1(4B(\sigma_0^1)^{-1}\ddot{\sigma}_0^1 +
-        4(\dot{B}(\sigma_0^1))^{-1}\dot{\sigma}_0^1) +
-        C((\sigma_0^1)^{-1})(\tilde{\omega}_{1/0}^1)^2r_{j/1}^1 \\
-        &- \ddot{r}_{2/0}^0 +
-        C((\sigma_0^2)^{-1})\tilde{r}_{j/2}^2(4B(\sigma_0^2)^{-1}\ddot{\sigma}_0^2 +
-        4(\dot{B}(\sigma_0^2))^{-1}\dot{\sigma}_0^2) -
-        C((\sigma_0^2)^{-1})(\tilde{\omega}_{2/0}^2)^2r_{j/2}^2
-    \end{split} \\
-    \begin{split}
-        \frac{d^2\phi_\sigma}{dt^2} &=
-        (-C((\sigma_0^1)^{-1})\tilde{j}_1(4B(\sigma_0^1)^{-1}\ddot{\sigma}_0^1 +
-            4(\dot{B}(\sigma_0^1))^{-1}\dot{\sigma}_0^1) +
-        C((\sigma_0^1)^{-1})(\tilde{\omega}_{1/0}^1)^2j_1) \times v \\
-        &+ 2(C((\sigma_0^1)^{-1})\tilde{\omega}_{1/0}^1j_1) \times
-        (C((\sigma_0^2)^{-1})\tilde{\omega}_{2/0}^2j_2) \\
-        &+ u\times(-C((\sigma_0^2)^{-1})\tilde{j}_2(4B(\sigma_0^2)^{-1}\ddot{\sigma}_0^2 +
-            4(\dot{B}(\sigma_0^2))^{-1}\dot{\sigma}_0^2) +
-        C((\sigma_0^2)^{-1})(\tilde{\omega}_{2/0}^2)^2j_2)
-    \end{split}
+    \dot{x}_i &=
+    \begin{bmatrix}
+        I_3 & 0_{3 \times 3} \\
+        0_{3 \times 3} & \frac{1}{4} B(\sigma_0^i)
+    \end{bmatrix} q_i = H_iq_i
+\end{align}
+\begin{align}
+    \dot{x} &=
+    \begin{bmatrix}
+        H_1 & 0_{6 \times 6} \\
+        0_{6 \times 6} & H_2
+    \end{bmatrix} q = Hq
 \end{align}
 
-Using these, we can get $A$ and $b$ for our UK constraint equation
+Where $B(\sigma)$ is defined as:
+
+\begin{align}
+    B(\sigma) &= (1 - \sigma^T\sigma)I + 2\tilde{\sigma} + 2\sigma\sigma^T
+\end{align}
+
+Using $q$, we can leave our constraint equations in terms of $q$ to get $\dot{q}$, and
+then integrate $x$ by plugging in $Hq$.  With this, we can get $A$ and $b$ for our UK
+constraint equation
 
 \begin{align}
     A =
     \begin{bmatrix}
-        I_3 & -4C((\sigma_0^1)^{-1})\tilde{r}_{j/1}^1B(\sigma_0^1)^{-1} & -I_3 &
-        4C((\sigma_0^2)^{-1})\tilde{r}_{j/2}^2B(\sigma_0^2)^{-1} \\
-        0_{3\times3} & 4\tilde{v}C((\sigma_0^1)^{-1})\tilde{j}_1B(\sigma_0^1)^{-1} &
-        0_{3\times3} & -4\tilde{u}C((\sigma_0^2)^{-1})\tilde{j}_2B(\sigma_0^2)^{-1}
+        I_3 & -C((\sigma_0^1)^{-1})\tilde{r}_{j/1}^1 & -I_3 &
+        C((\sigma_0^2)^{-1})\tilde{r}_{j/2}^2 \\
+        0_{3\times3} & \tilde{v}C((\sigma_0^1)^{-1})\tilde{j}_1 &
+        0_{3\times3} & -\tilde{u}C((\sigma_0^2)^{-1})\tilde{j}_2
     \end{bmatrix}
 \end{align}
 \begin{align}
     \begin{split}
         b_r &=
-        4C((\sigma_0^1)^{-1})\tilde{r}_{j/1}^1(\dot{B}(\sigma_0^1))^{-1}\dot{\sigma}_0^1
-        - C((\sigma_0^1)^{-1})(\tilde{\omega}_{1/0}^1)^2r_{j/1}^1 \\
-        &-
-        4C((\sigma_0^2)^{-1})\tilde{r}_{j/2}^2(\dot{B}(\sigma_0^2))^{-1}\dot{\sigma}_0^2
-        + C((\sigma_0^2)^{-1})(\tilde{\omega}_{2/0}^2)^2r_{j/2}^2
+        -C((\sigma_0^1)^{-1})(\tilde{\omega}_{1/0}^1)^2r_{j/1}^1 +
+        C((\sigma_0^2)^{-1})(\tilde{\omega}_{2/0}^2)^2r_{j/2}^2
     \end{split} \\
     \begin{split}
-        b_\sigma &=
-        -4\tilde{v}C((\sigma_0^1)^{-1})\tilde{j}_1(\dot{B}(\sigma_0^1))^{-1}\dot{\sigma}_0^1
-        + \tilde{v}C((\sigma_0^1)^{-1})(\tilde{\omega}_{1/0}^1)^2j_1 \\
+        b_\sigma &= \tilde{v}C((\sigma_0^1)^{-1})(\tilde{\omega}_{1/0}^1)^2j_1 -
+        \tilde{u}C((\sigma_0^2)^{-1})(\tilde{\omega}_{2/0}^2)^2j_2 \\
         &- 2(C((\sigma_0^1)^{-1})\tilde{\omega}_{1/0}^1j_1) \times
-        (C((\sigma_0^2)^{-1})\tilde{\omega}_{2/0}^2j_2) \\
-        &+
-        4\tilde{u}C((\sigma_0^2)^{-1})\tilde{j}_2(\dot{B}(\sigma_0^2))^{-1}\dot{\sigma}_0^2
-        - \tilde{u}C((\sigma_0^2)^{-1})(\tilde{\omega}_{2/0}^2)^2j_2
+        (C((\sigma_0^2)^{-1})\tilde{\omega}_{2/0}^2j_2)
     \end{split}
 \end{align}
 
@@ -224,15 +214,7 @@ translational equations are pretty simple.
 The rotational equations of motion come from euler equations:
 
 \begin{align}
-    I_i^i\dot{\omega} &= M - \omega\times I_i^i\omega
-\end{align}
-
-However, we need to get this in terms of $\ddot{\sigma}_0^i$.
-
-\begin{align}
-    \dot{\sigma} &= \frac{B(\sigma)}{4}\omega \\
-    \ddot{\sigma} &= \frac{1}{4}(\dot{B}(\sigma)\omega + B\dot{\omega}) \\
-    &= \frac{1}{4}(\dot{B}(\sigma)\omega + B((I_i^i)^{-1}M - (I_i^i)^{-1}\tilde{\omega}I_i^i\omega))
+    I_i^i\dot{\omega} &= T - \omega\times I_i^i\omega
 \end{align}
 
 This gives us the overall equations of motion (per body) as
@@ -240,16 +222,18 @@ This gives us the overall equations of motion (per body) as
 \begin{align}
     \begin{bmatrix}
         m_iI_3 & 0_{3 \times 3} \\
-        0_{3 \times 3} & 4I_3
+        0_{3 \times 3} & I_i^i
     \end{bmatrix}
     \begin{bmatrix}
-        \ddot{r}_{i/0}^0 \\
-        \ddot{\sigma}_0^i
+        \dot{v}_{i/0}^0 \\
+        \dot{\omega}_0^i
     \end{bmatrix} =
     \begin{bmatrix}
         F \\
-        \dot{B}(\sigma)\omega + B((I_i^i)^{-1}M - (I_i^i)^{-1}\tilde{\omega}I_i^i\omega)
+        T - \tilde{\omega}I_i^i\omega
     \end{bmatrix}
 \end{align}
+
+\section{State Integration}
 
 \end{document}

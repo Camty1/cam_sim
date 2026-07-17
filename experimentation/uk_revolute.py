@@ -189,7 +189,7 @@ class Rigidbody:
             self.sigma_0_to_body, self.sigma_dot_0_to_body
         )
         self.kinematics.omega_body_wrt_0_in_body = (
-            1 / 4 * self.kinematics.b @ self.sigma_dot_0_to_body
+            4 * self.kinematics.b_inv @ self.sigma_dot_0_to_body
         )
         self.kinematics.tilde_omega_body_wrt_0_in_body = tilde(
             self.kinematics.omega_body_wrt_0_in_body
@@ -329,6 +329,40 @@ class RevoluteJoint:
 
 
 @dataclass
+class ForceGenerator:
+    """
+    Contains all potential forces and torques that one can apply to a given rigid body
+    """
+
+    body_idx: int
+    f_wrt_0_in_0: np.ndarray
+    f_wrt_0_in_body: np.ndarray
+    r_f_wrt_body_in_body: np.ndarray
+    tau_body_wrt_0_in_body: np.ndarray
+
+    def __post_init__(self) -> None:
+        assert self.body_idx >= 0
+        assert self.f_wrt_0_in_0.shape == (3, 1)
+        assert self.f_wrt_0_in_body.shape == (3, 1)
+        assert self.r_f_wrt_body_in_body.shape == (3, 1)
+        assert self.tau_body_wrt_0_in_body.shape == (3, 1)
+
+    def compute_forces(self, body: Rigidbody) -> np.ndarray:
+        """
+        Computes the forces and moments to be applied to the body
+        """
+        f_total_wrt_0_in_0 = (
+            self.f_wrt_0_in_0 + body.kinematics.c_body_to_0 @ self.f_wrt_0_in_body
+        )
+        tau_body_wrt_0 = (
+            self.tau_body_wrt_0_in_body
+            + tilde(self.r_f_wrt_body_in_body) @ self.f_wrt_0_in_body
+        )
+
+        return np.concatenate([f_total_wrt_0_in_0, tau_body_wrt_0], axis=0)
+
+
+@dataclass
 class MultiRigidbodyDerivedMassProperties:
     """
     Derived mass properties for a MultiRigidbody.  Must be initialized after adding all bodies
@@ -349,6 +383,7 @@ class MultiRigidbody:
 
     bodies: list[Rigidbody] = field(default_factory=list)
     joints: list[RevoluteJoint] = field(default_factory=list)
+    forces: list[ForceGenerator] = field(default_factory=list)
     derived_mass_properties: MultiRigidbodyDerivedMassProperties = field(
         default_factory=lambda: MultiRigidbodyDerivedMassProperties()
     )
@@ -379,7 +414,7 @@ class MultiRigidbody:
             )
         )
 
-    def add_joint(
+    def add_revolute_joint(
         self,
         body1_idx: int,
         body2_idx: int,
@@ -509,13 +544,31 @@ class MultiRigidbody:
                 self.bodies[joint.body1_idx], self.bodies[joint.body2_idx]
             )
 
-    def unconstrained_dynamics(self) -> np.ndarray:
+    def calculate_forces(self) -> np.ndarray:
+        """
+        Loops through force generators to get forces and torques applied to bodies
+        """
+        f = np.zeros((6 * len(self.bodies), 1))
+        for force in self.forces:
+            body_idx = force.body_idx
+            body_slice = slice(6 * body_idx, 6 * (body_idx + 1))
+            f[body_slice, 0] += force.compute_forces(self.bodies[body_idx])
+
+        return f
+
+    def unconstrained_dynamics(self, total_force: np.ndarray) -> np.ndarray:
         """
         Loops through bodies to get M @ x_ddot
         """
         body_scaled_state_ddots: list[np.ndarray] = []
-        for body in self.bodies:
-            body_scaled_state_ddots.append(body.unconstrained_dynamics())
+        for body_idx, body in enumerate(self.bodies):
+            force_slice = slice(6 * body_idx, 6 * body_idx + 3)
+            moment_slice = slice(6 * body_idx + 3, 6 * (body_idx + 1))
+            f_body_wrt_0_in_0 = total_force[force_slice, 0]
+            tau_body_wrt_0_in_body = total_force[moment_slice, 0]
+            body_scaled_state_ddots.append(
+                body.unconstrained_dynamics(f_body_wrt_0_in_0, tau_body_wrt_0_in_body)
+            )
 
         return np.concatenate(body_scaled_state_ddots, axis=0)
 
@@ -650,7 +703,8 @@ class MultiRigidbody:
         if not self.derived_mass_properties.initialized:
             raise ValueError("Derived mass properties have not been initialized")
         self.populate_kinematics()
-        q = self.unconstrained_dynamics()
+        f = self.calculate_forces()
+        q = self.unconstrained_dynamics(f)
         a_matrix, b_vector = self.uk_a_matrix_b_vector_with_baumgarte()
 
         # Precompute common terms
@@ -673,6 +727,9 @@ class MultiRigidbody:
 
 
 def main() -> None:
+    """
+
+    """
     mrb = MultiRigidbody()
     mrb.add_body(
         1,
@@ -685,7 +742,7 @@ def main() -> None:
         r_body_wrt_0_in_0=np.array([[1], [0], [0]]),
         v_body_wrt_0_in_0=np.array([[0], [1], [0]]),
     )
-    mrb.add_joint(
+    mrb.add_revolute_joint(
         0,
         1,
         np.array([[0.5], [0], [0]]),
