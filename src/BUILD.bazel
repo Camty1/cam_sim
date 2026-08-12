@@ -1,3 +1,5 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_binary", "cc_test")
+
 cc_library(
     name = "gsl",
     srcs = [],
@@ -38,9 +40,8 @@ cc_test(
     srcs=["conversions_test.cc"],
     deps=[
         ":conversions",
-        "@googletest//:gtest",
         "@googletest//:gtest_main"
-    ]
+    ],
 )
 
 cc_library(
@@ -49,8 +50,42 @@ cc_library(
     hdrs=["time.h"],
 )
 
+cc_library(
+    name="utils",
+    srcs=["utils.cc"],
+    hdrs=["utils.h"],
+)
+
+cc_test(
+    name="utils_test",
+    srcs=["utils_test.cc"],
+    deps=[
+        ":utils",
+        "@googletest//:gtest_main",
+        "@bazel_tools//tools/cpp/runfiles",
+    ],
+    data=["//dat/utils_test:test_files"],
+    defines=["BAZEL_UNIT_TEST_MODE"],
+)
+
+cc_library(
+    name="json",
+    srcs=["json.cc"],
+    hdrs=["json.h"],
+    deps=[":utils"],
+)
+
+cc_test(
+    name="json_test",
+    srcs=["json_test.cc"],
+    deps=[
+        ":json",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_binary(
     name="main",
     srcs=["main.cc"],
-    deps=[":spherical_harmonic_models", ":time"],
+    deps=[":utils"],
 )

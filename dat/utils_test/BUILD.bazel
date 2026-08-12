@@ -1,0 +1,5 @@
+filegroup(
+    name="test_files",
+    srcs = ["empty.txt", "just_right.txt", "too_long.txt"],
+    visibility = ["//visibility:public"]
+)

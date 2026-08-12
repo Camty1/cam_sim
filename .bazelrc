@@ -1,1 +1,3 @@
 build --action_env=BAZEL_CXXOPTS="-std=c++17:-Werror"
+build:debug --action_env=BAZEL_CXXOPTS="-std=c++17:-Werror" --copt=-DUNIT_TEST -c dbg --copt="-Werror"
+test --test_output=all --copt=-DUNIT_TEST --copt="-Werror"
